@@ -108,16 +108,20 @@ class InformationConfirmationPage extends StatelessWidget {
                     height: 1.2,
                   );
 
-                  return SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      edgePad * 1.0,
-                      edgePad * 0.6,
-                      edgePad * 1.0,
-                      bottomPad,
-                    ),
-                    clipBehavior: Clip.none,
-                    child: Column(
+                  final allowScroll = maxW < 600;
+                  final padding = EdgeInsets.fromLTRB(
+                    edgePad * 1.0,
+                    edgePad * 0.6,
+                    edgePad * 1.0,
+                    bottomPad,
+                  );
+                  final content = Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisAlignment: allowScroll
+                          ? MainAxisAlignment.start
+                          : MainAxisAlignment.center,
+                      mainAxisSize:
+                          allowScroll ? MainAxisSize.min : MainAxisSize.max,
                       children: [
                         SizedBox(
                           width: logoWidth,
@@ -193,7 +197,18 @@ class InformationConfirmationPage extends StatelessWidget {
                           ],
                         ),
                       ],
-                    ),
+                    );
+
+                  if (allowScroll) {
+                    return SingleChildScrollView(
+                      padding: padding,
+                      clipBehavior: Clip.none,
+                      child: content,
+                    );
+                  }
+                  return Padding(
+                    padding: padding,
+                    child: content,
                   );
                 },
               ),
