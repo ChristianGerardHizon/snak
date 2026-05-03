@@ -1,0 +1,32 @@
+{
+    "pageTitle": "Mag-log in",
+    "loginButton": "Mag-log in",
+    "loginAsAdminList": [
+        "Hindi ka user?",
+        "Mag-log in bilang Tagapamahala"
+    ],
+    "returnToLoginAsUser": [
+        "Hindi ka tagapamahala? ",
+        "Mag-log in bilang User"
+    ],
+    "loginSuccess": "Nagtagumpay sa pag-log in",
+    "logoutButton": "Mag-logout",
+    "logoutConfirm": "Sigurado ka bang gusto mong mag-logout?",
+    "forgotPassword": "Nakalimutan ang Password?",
+    "forgotPasswordTitle": "Nakalimutan ang Password",
+    "forgotPasswordSubtitle": "Ilagay ang iyong email address at magpapadala kami ng link para i-reset ang iyong password.",
+    "sendResetLink": "Ipadala ang Reset Link",
+    "backToLogin": "Bumalik sa Login",
+    "checkEmail": "Tingnan ang Iyong Email",
+    "resetLinkSent(email)": "Naipadala na ang password reset link sa $email",
+    "signInToContinue": "Mag-sign in upang magpatuloy",
+    "signingIn": "Nagsa-sign in...",
+    "verificationEmailSent": "Naipadala na ang verification email sa iyong email address",
+    "signUp": "Mag-sign Up",
+    "signUpButton": "Gumawa ng Account",
+    "signUpSubtitle": "Gumawa ng account para makapagsimula",
+    "alreadyHaveAccount": "Mayroon nang account? Mag-sign in",
+    "dontHaveAccount": "Wala pang account? Mag-sign up",
+    "signUpSuccess": "Nagawa na ang account! Tingnan ang iyong email para ma-verify.",
+    "passwordsDoNotMatch": "Hindi magkatugma ang mga password"
+}

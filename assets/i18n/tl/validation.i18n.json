@@ -1,0 +1,14 @@
+{
+    "required": "Kinakailangan ang field na ito",
+    "invalidEmail": "Maglagay ng valid na email address",
+    "invalidPhone": "Maglagay ng valid na numero ng telepono",
+    "minLength": "Dapat ay hindi bababa sa {min} na karakter",
+    "maxLength": "Dapat ay hindi hihigit sa {max} na karakter",
+    "passwordMismatch": "Hindi magkatugma ang mga password",
+    "invalidNumber": "Maglagay ng valid na numero",
+    "invalidDate": "Maglagay ng valid na petsa",
+    "invalidUrl": "Maglagay ng valid na URL",
+    "minValue": "Ang halaga ay dapat hindi bababa sa {min}",
+    "maxValue": "Ang halaga ay dapat hindi hihigit sa {max}",
+    "positiveNumber": "Maglagay ng positibong numero"
+}

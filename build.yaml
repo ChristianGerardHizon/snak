@@ -1,0 +1,12 @@
+targets:
+  $default:
+    builders:
+      slang_build_runner:
+        options:
+          base_locale: en
+          input_directory: assets/i18n
+          input_file_pattern: .i18n.json
+          output_directory: lib/src/core/i18n
+          namespaces: true
+          flutterIntegration: true
+
