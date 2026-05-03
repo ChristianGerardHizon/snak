@@ -53,6 +53,14 @@ class StudentsRepository {
     return row == null ? null : Student.fromRow(row);
   }
 
+  Future<Student?> getByStudentNumber(String studentNumber) async {
+    final row = await _from
+        .select()
+        .eq('student_number', studentNumber)
+        .maybeSingle();
+    return row == null ? null : Student.fromRow(row);
+  }
+
   Future<Student> create(Student student) async {
     final row = await _from.insert(student.toRow()).select().single();
     return Student.fromRow(row);

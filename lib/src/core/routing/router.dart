@@ -6,6 +6,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'dialog_dismissing_observer.dart';
 import 'router_utils.dart';
 import 'routes/home.routes.dart';
+import 'routes/report.routes.dart';
 
 part 'router.g.dart';
 
@@ -27,6 +28,7 @@ GoRouter router(Ref ref) {
     errorBuilder: RouterUtils.errorBuilder,
     routes: [
       $homeRoute,
+      $reportRoute,
     ],
   );
 }
