@@ -1,397 +1,96 @@
-name: Deploy System
+name: Build and Deploy Web to GitHub Pages
 
 on:
-  pull_request:
-    types: [ closed ]
-    branches: [ "staging", "main" ]
+  push:
+    branches: ["main"]
   workflow_dispatch:
 
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: write # REQUIRED for creating GitHub Releases
+  contents: write
+  pages: write
+  id-token: write
+  pull-requests: read
 
 jobs:
-  # ==========================================
-  # PREFLIGHT: Check version label before staging deploy
-  # ==========================================
-  preflight-staging:
-    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && github.base_ref == 'staging')
+  version:
     runs-on: ubuntu-latest
     outputs:
-      skip: ${{ steps.bump_type.outputs.skip }}
-      bump: ${{ steps.bump_type.outputs.bump }}
-    steps:
-      - name: Detect version bump type
-        id: bump_type
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            BUMP="patch"
-            echo "::notice::Manual dispatch — defaulting to patch bump"
-          else
-            LABELS='${{ toJSON(github.event.pull_request.labels.*.name) }}'
-
-            if echo "$LABELS" | grep -q '"version:major"'; then
-              BUMP="major"
-            elif echo "$LABELS" | grep -q '"version:minor"'; then
-              BUMP="minor"
-            elif echo "$LABELS" | grep -q '"version:patch"'; then
-              BUMP="patch"
-            elif echo "$LABELS" | grep -q '"major"'; then
-              BUMP="major"
-            elif echo "$LABELS" | grep -q '"minor"'; then
-              BUMP="minor"
-            elif echo "$LABELS" | grep -q '"patch"'; then
-              BUMP="patch"
-            else
-              echo "::notice::No version label found — skipping staging deploy"
-              echo "skip=true" >> $GITHUB_OUTPUT
-              exit 0
-            fi
-          fi
-
-          echo "bump=$BUMP" >> $GITHUB_OUTPUT
-          echo "::notice::Version bump type: $BUMP"
-
-  # ==========================================
-  # JOB 1: STAGING TRACK
-  # ==========================================
-  deploy-staging:
-    needs: preflight-staging
-    if: needs.preflight-staging.outputs.skip != 'true'
-    runs-on: ubuntu-latest
+      version: ${{ steps.compute.outputs.version }}
+      tag: ${{ steps.compute.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
-      # --- PREFLIGHT CHECKS ---
-      - name: Verify deploy secrets exist
-        run: |
-          MISSING=""
-          if [ -z "${{ secrets.VERSION_MANAGER_URL }}" ]; then MISSING="$MISSING VERSION_MANAGER_URL"; fi
-          if [ -z "${{ secrets.VERSION_COLLECTION_ID }}" ]; then MISSING="$MISSING VERSION_COLLECTION_ID"; fi
-          if [ -z "${{ secrets.POCKETBASE_URL_STAGING }}" ]; then MISSING="$MISSING POCKETBASE_URL_STAGING"; fi
-          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then MISSING="$MISSING KEYSTORE_BASE64"; fi
-          if [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ]; then MISSING="$MISSING KEYSTORE_PASSWORD"; fi
-          if [ -z "${{ secrets.KEY_ALIAS }}" ]; then MISSING="$MISSING KEY_ALIAS"; fi
-          if [ -z "${{ secrets.KEY_PASSWORD }}" ]; then MISSING="$MISSING KEY_PASSWORD"; fi
-          if [ -z "${{ secrets.SSH_HOST }}" ]; then MISSING="$MISSING SSH_HOST"; fi
-          if [ -z "${{ secrets.SSH_USER }}" ]; then MISSING="$MISSING SSH_USER"; fi
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then MISSING="$MISSING SSH_PRIVATE_KEY"; fi
-          if [ -n "$MISSING" ]; then
-            echo "::error::Missing required secrets:$MISSING"
-            exit 1
-          fi
-      # --- PREFLIGHT CHECKS END ---
-
-      # ROBUST VERSION CALCULATION
-      - name: Calculate Staging Version
-        id: calc_staging
-        env:
-          URL: ${{ secrets.VERSION_MANAGER_URL }}
-          ID: ${{ secrets.VERSION_COLLECTION_ID }}
-          BUMP: ${{ needs.preflight-staging.outputs.bump }}
-        run: |
-          if [ -z "$URL" ] || [ -z "$ID" ]; then
-            echo "::error::Secrets VERSION_MANAGER_URL or VERSION_COLLECTION_ID are missing!"
-            exit 1
-          fi
-
-          RESPONSE=$(curl -s "$URL/$ID")
-          MAJOR=$(echo $RESPONSE | jq -r '.major')
-          MINOR=$(echo $RESPONSE | jq -r '.minor')
-          PATCH=$(echo $RESPONSE | jq -r '.patch')
-
-          if [ "$MAJOR" == "null" ]; then
-             echo "::error::Failed to parse version. Response: $RESPONSE"
-             exit 1
-          fi
-
-          # Apply version bump based on PR label
-          case "$BUMP" in
-            major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-              ;;
-            minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              ;;
-            *)
-              PATCH=$((PATCH + 1))
-              ;;
-          esac
-
-          STAGING_VER="$MAJOR.$MINOR.$PATCH-staging"
-          STAGING_VER_BASE="$MAJOR.$MINOR.$PATCH"
-
-          echo "STAGING_VER=$STAGING_VER" >> $GITHUB_ENV
-          echo "STAGING_VER_BASE=$STAGING_VER_BASE" >> $GITHUB_ENV
-          echo "Calculated Staging Version: $STAGING_VER (bump: $BUMP)"
-
-      - name: Resolve unique staging tag
+      - name: Compute next version from PR label
+        id: compute
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Match production convention (vX.Y.Z) plus -staging to align with --build-name STAGING_VER
-          TAG="v${STAGING_VER_BASE}-staging"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: token $GH_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/git/refs/tags/$TAG")
+          set -e
 
-          if [ "$STATUS" == "200" ]; then
-            # Tag exists, append run number to make it unique
-            TAG="${TAG}-build.${{ github.run_number }}"
-            echo "::notice::Tag already exists, using $TAG instead."
+          LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          if [ -z "$LATEST_TAG" ]; then
+            MAJOR=0; MINOR=0; PATCH=0
+          else
+            VER="${LATEST_TAG#v}"
+            MAJOR="${VER%%.*}"
+            REST="${VER#*.}"
+            MINOR="${REST%%.*}"
+            PATCH="${REST#*.}"
           fi
+          echo "Latest tag: ${LATEST_TAG:-<none>} ($MAJOR.$MINOR.$PATCH)"
 
-          echo "STAGING_TAG=$TAG" >> $GITHUB_ENV
-          echo "Resolved staging tag: $TAG (app build-name: ${STAGING_VER})"
-
-      # --- SETUP & CACHE START ---
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-          cache: 'gradle'
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.3'
-          cache: true
-
-      - name: Cache Pub dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache/hosted
-            ~/.pub-cache/git
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: ${{ runner.os }}-pub-
-
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk /opt/ghc /usr/local/share/boost
-          sudo apt-get clean
-          df -h
-
-      - name: Install dependencies
-        run: flutter pub get
-      # --- SETUP & CACHE END ---
-
-      # DECODE KEYSTORE FOR RELEASE SIGNING
-      - name: Decode Keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > ${{ github.workspace }}/android/app/upload-keystore.jks
-
-      # BUILD WEB & APK
-      - name: Build Web (WASM)
-        run: flutter build web --wasm --release --build-name=${{ env.STAGING_VER }} --build-number=${{ github.run_number }} --dart-define=ENV=staging --dart-define=API_URL=${{ secrets.POCKETBASE_URL_STAGING }}
-
-      - name: Write staging web config.json
-        run: |
-          cat > build/web/config.json <<EOF
-          {
-            "environment": "staging",
-            "apiUrl": "${{ secrets.POCKETBASE_URL_STAGING }}",
-            "version": "${{ env.STAGING_VER }}",
-            "buildNumber": "${{ github.run_number }}",
-            "androidFlavor": "staging"
-          }
-          EOF
-
-      - name: Build APK (Release)
-        env:
-          CI: "true"
-          CM_KEYSTORE_PATH: ${{ github.workspace }}/android/app/upload-keystore.jks
-          CM_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          CM_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          CM_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: flutter build apk --flavor staging --release --build-name=${{ env.STAGING_VER }} --build-number=${{ github.run_number }} --dart-define=ENV=staging --dart-define=API_URL=${{ secrets.POCKETBASE_URL_STAGING }}
-
-      # --- SSH DEPLOY START ---
-      - name: Setup SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add server to known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Deploy web build to staging server
-        run: |
-          rsync -avz --delete \
-            build/web/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/pocketbase/imbak-staging/pb_public/
-
-      - name: Deploy migrations to staging server
-        run: |
-          rsync -avz --delete \
-            server/pb_migrations/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/pocketbase/imbak-staging/pb_migrations/
-
-      - name: Deploy hooks to staging server
-        run: |
-          rsync -avz --delete \
-            server/pb_hooks/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/pocketbase/imbak-staging/pb_hooks/
-
-      - name: Restart PocketBase staging service
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            'sudo systemctl restart pocketbase_imbak-staging.service'
-      # --- SSH DEPLOY END ---
-
-      # RELEASE
-      - name: Create Staging Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.STAGING_TAG }}
-          target_commitish: ${{ github.sha }}
-          name: ${{ env.STAGING_TAG }}
-          prerelease: true
-          files: build/app/outputs/flutter-apk/app-staging-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # ==========================================
-  # JOB 2: PRODUCTION TRACK
-  # ==========================================
-  deploy-production:
-    if: github.event.pull_request.merged == true && github.base_ref == 'main'
-    runs-on: ubuntu-latest
-    environment: Production
-    outputs:
-      prod_ver: ${{ steps.calc_prod.outputs.prod_ver }}
-      new_patch: ${{ steps.calc_prod.outputs.new_patch }}
-      major: ${{ steps.calc_prod.outputs.major }}
-      minor: ${{ steps.calc_prod.outputs.minor }}
-      commit_sha: ${{ steps.get_sha.outputs.sha }}
-      is_minimum_version: ${{ steps.check_min_ver.outputs.is_minimum_version }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Capture commit SHA
-        id: get_sha
-        run: echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-
-      # --- PREFLIGHT CHECKS ---
-      - name: Verify deploy secrets exist
-        run: |
-          MISSING=""
-          if [ -z "${{ secrets.VERSION_MANAGER_URL }}" ]; then MISSING="$MISSING VERSION_MANAGER_URL"; fi
-          if [ -z "${{ secrets.VERSION_COLLECTION_ID }}" ]; then MISSING="$MISSING VERSION_COLLECTION_ID"; fi
-          if [ -z "${{ secrets.POCKETBASE_URL_PROD }}" ]; then MISSING="$MISSING POCKETBASE_URL_PROD"; fi
-          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then MISSING="$MISSING KEYSTORE_BASE64"; fi
-          if [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ]; then MISSING="$MISSING KEYSTORE_PASSWORD"; fi
-          if [ -z "${{ secrets.KEY_ALIAS }}" ]; then MISSING="$MISSING KEY_ALIAS"; fi
-          if [ -z "${{ secrets.KEY_PASSWORD }}" ]; then MISSING="$MISSING KEY_PASSWORD"; fi
-          if [ -z "${{ secrets.SSH_HOST }}" ]; then MISSING="$MISSING SSH_HOST"; fi
-          if [ -z "${{ secrets.SSH_USER }}" ]; then MISSING="$MISSING SSH_USER"; fi
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then MISSING="$MISSING SSH_PRIVATE_KEY"; fi
-          if [ -n "$MISSING" ]; then
-            echo "::error::Missing required secrets:$MISSING"
-            exit 1
-          fi
-      # --- PREFLIGHT CHECKS END ---
-
-      # --- VERSION CHECKS (before setup — no dependencies on Java/Flutter) ---
-      # DETECT VERSION BUMP TYPE FROM PR LABELS
-      - name: Detect version bump type
-        id: bump_type
-        run: |
-          LABELS='${{ toJSON(github.event.pull_request.labels.*.name) }}'
-
-          if echo "$LABELS" | grep -q '"version:major"'; then
-            BUMP="major"
-          elif echo "$LABELS" | grep -q '"version:minor"'; then
-            BUMP="minor"
-          elif echo "$LABELS" | grep -q '"version:patch"'; then
-            BUMP="patch"
-          elif echo "$LABELS" | grep -q '"major"'; then
-            BUMP="major"
-          elif echo "$LABELS" | grep -q '"minor"'; then
-            BUMP="minor"
-          elif echo "$LABELS" | grep -q '"patch"'; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             BUMP="patch"
           else
-            echo "::error::Missing version label! Add one of: version:patch, version:minor, version:major (or patch, minor, major)"
-            exit 1
+            PR_NUMBER=$(gh pr list --repo "${{ github.repository }}" \
+              --state merged --base main \
+              --search "${{ github.sha }}" \
+              --json number --jq '.[0].number')
+
+            if [ -z "$PR_NUMBER" ]; then
+              echo "::error::Could not find a merged PR for commit ${{ github.sha }}"
+              exit 1
+            fi
+
+            LABELS=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" \
+              --json labels --jq '[.labels[].name] | join(",")')
+            echo "PR #$PR_NUMBER labels: $LABELS"
+
+            case ",$LABELS," in
+              *,version:major,*) BUMP="major" ;;
+              *,version:minor,*) BUMP="minor" ;;
+              *,version:patch,*) BUMP="patch" ;;
+              *)
+                echo "::error::PR #$PR_NUMBER is missing a version label (version:patch | version:minor | version:major)"
+                exit 1
+                ;;
+            esac
           fi
+          echo "Bump: $BUMP"
 
-          echo "bump=$BUMP" >> $GITHUB_OUTPUT
-          echo "::notice::Version bump type: $BUMP"
-
-      - name: Check minimum version label
-        id: check_min_ver
-        run: |
-          LABELS='${{ toJSON(github.event.pull_request.labels.*.name) }}'
-          if echo "$LABELS" | grep -q '"minimum version"'; then
-            echo "is_minimum_version=true" >> $GITHUB_OUTPUT
-            echo "::notice::This release will also update the minimum required version"
-          else
-            echo "is_minimum_version=false" >> $GITHUB_OUTPUT
-          fi
-
-      # ROBUST VERSION CALCULATION
-      - name: Calculate Prod Version
-        id: calc_prod
-        env:
-          URL: ${{ secrets.VERSION_MANAGER_URL }}
-          ID: ${{ secrets.VERSION_COLLECTION_ID }}
-          BUMP: ${{ steps.bump_type.outputs.bump }}
-        run: |
-          if [ -z "$URL" ] || [ -z "$ID" ]; then
-            echo "::error::Secrets Missing!"
-            exit 1
-          fi
-
-          RESPONSE=$(curl -s "$URL/$ID")
-          MAJOR=$(echo $RESPONSE | jq -r '.major')
-          MINOR=$(echo $RESPONSE | jq -r '.minor')
-          PATCH=$(echo $RESPONSE | jq -r '.patch')
-
-          if [ "$MAJOR" == "null" ]; then exit 1; fi
-
-          # Apply version bump based on PR label
           case "$BUMP" in
-            major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-              ;;
-            minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              ;;
-            *)
-              PATCH=$((PATCH + 1))
-              ;;
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
           esac
 
-          PROD_VER="$MAJOR.$MINOR.$PATCH"
+          VERSION="$MAJOR.$MINOR.$PATCH"
+          TAG="v$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Next version: $TAG"
 
-          echo "PROD_VER=$PROD_VER" >> $GITHUB_ENV
-          echo "prod_ver=$PROD_VER" >> $GITHUB_OUTPUT
-          echo "new_patch=$PATCH" >> $GITHUB_OUTPUT
-          echo "major=$MAJOR" >> $GITHUB_OUTPUT
-          echo "minor=$MINOR" >> $GITHUB_OUTPUT
-      # --- VERSION CHECKS END ---
-
-      # --- SETUP & CACHE START ---
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-          cache: 'gradle'
+  build:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: subosito/flutter-action@v2
         with:
@@ -407,136 +106,41 @@ jobs:
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: ${{ runner.os }}-pub-
 
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk /opt/ghc /usr/local/share/boost
-          sudo apt-get clean
-          df -h
-
       - name: Install dependencies
         run: flutter pub get
-      # --- SETUP & CACHE END ---
 
-      # DECODE KEYSTORE FOR RELEASE SIGNING
-      - name: Decode Keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > ${{ github.workspace }}/android/app/upload-keystore.jks
-
-      # BUILD WEB & APK
       - name: Build Web
-        run: flutter build web --release --build-name=${{ env.PROD_VER }} --build-number=${{ github.run_number }} --dart-define=ENV=prod --dart-define=API_URL=${{ secrets.POCKETBASE_URL_PROD }}
-
-      - name: Write production web config.json
         run: |
-          cat > build/web/config.json <<EOF
-          {
-            "environment": "prod",
-            "apiUrl": "${{ secrets.POCKETBASE_URL_PROD }}",
-            "version": "${{ env.PROD_VER }}",
-            "buildNumber": "${{ github.run_number }}",
-            "androidFlavor": "prod"
-          }
-          EOF
+          flutter build web --release \
+            --base-href "/${{ github.event.repository.name }}/" \
+            --build-name=${{ needs.version.outputs.version }} \
+            --build-number=${{ github.run_number }}
 
-      - name: Build APK (Release)
-        env:
-          CI: "true"
-          CM_KEYSTORE_PATH: ${{ github.workspace }}/android/app/upload-keystore.jks
-          CM_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          CM_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          CM_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: flutter build apk --flavor prod --release --build-name=${{ env.PROD_VER }} --build-number=${{ github.run_number }} --dart-define=ENV=prod --dart-define=API_URL=${{ secrets.POCKETBASE_URL_PROD }}
-
-      # --- SSH DEPLOY START ---
-      - name: Setup SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          path: build/web
 
-      - name: Add server to known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Deploy web build to production server
-        run: |
-          rsync -avz --delete \
-            build/web/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/pocketbase/imbak/pb_public/
-
-      - name: Deploy migrations to production server
-        run: |
-          rsync -avz --delete \
-            server/pb_migrations/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/pocketbase/imbak/pb_migrations/
-
-      - name: Deploy hooks to production server
-        run: |
-          rsync -avz --delete \
-            server/pb_hooks/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/pocketbase/imbak/pb_hooks/
-
-      - name: Restart PocketBase production service
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            'sudo systemctl restart pocketbase_imbak.service'
-      # --- SSH DEPLOY END ---
-
-      # UPLOAD & DEPLOY
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-prod-release.apk
-
-  # ==========================================
-  # JOB 3: RELEASE & SYNC
-  # ==========================================
-  release-and-sync:
-    needs: deploy-production
+  deploy:
+    needs: build
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download APK
-        uses: actions/download-artifact@v4
-        with:
-          name: app-release-apk
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
-      - name: Create Release
+  release:
+    needs: [version, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.deploy-production.outputs.prod_ver }}
-          target_commitish: ${{ needs.deploy-production.outputs.commit_sha }}
-          name: "v${{ needs.deploy-production.outputs.prod_ver }}"
-          files: app-prod-release.apk
+          tag_name: ${{ needs.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ needs.version.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update Version Manager
-        env:
-          NEW_PATCH: ${{ needs.deploy-production.outputs.new_patch }}
-          MAJOR: ${{ needs.deploy-production.outputs.major }}
-          MINOR: ${{ needs.deploy-production.outputs.minor }}
-          IS_MIN_VER: ${{ needs.deploy-production.outputs.is_minimum_version }}
-          URL: ${{ secrets.VERSION_MANAGER_URL }}
-          ID: ${{ secrets.VERSION_COLLECTION_ID }}
-          TOKEN: ${{ secrets.PB_TOKEN }}
-        run: |
-           if [ "$IS_MIN_VER" == "true" ]; then
-             echo "::notice::Updating minimum version to $MAJOR.$MINOR.$NEW_PATCH"
-             PAYLOAD=$(jq -n --argjson major "$MAJOR" --argjson minor "$MINOR" --argjson patch "$NEW_PATCH" \
-               '{major: $major, minor: $minor, patch: $patch, minimumMajor: $major, minimumMinor: $minor, minimumPatch: $patch}')
-           else
-             PAYLOAD=$(jq -n --argjson major "$MAJOR" --argjson minor "$MINOR" --argjson patch "$NEW_PATCH" \
-               '{major: $major, minor: $minor, patch: $patch}')
-           fi
-
-           if [ -z "$TOKEN" ]; then
-              HTTP=$(curl -sS -o /tmp/vm_patch_out -w "%{http_code}" -X PATCH "$URL/$ID" -H "Content-Type: application/json" -d "$PAYLOAD")
-           else
-              HTTP=$(curl -sS -o /tmp/vm_patch_out -w "%{http_code}" -X PATCH "$URL/$ID" -H "Content-Type: application/json" -H "Authorization: $TOKEN" -d "$PAYLOAD")
-           fi
-           if [ "$HTTP" != "200" ] && [ "$HTTP" != "204" ]; then
-             echo "::error::Version manager PATCH failed (HTTP $HTTP): $(cat /tmp/vm_patch_out)"
-             exit 1
-           fi
