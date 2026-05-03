@@ -1,18 +1,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:snak/src/core/packages/pocketbase/pocketbase_provider.dart';
-import 'package:snak/src/core/utils/window_utils.dart';
-import 'package:snak/src/application.dart';
-import 'package:snak/src/core/i18n/strings.g.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'src/application.dart';
+import 'src/core/i18n/strings.g.dart';
 import 'src/core/packages/sentry/sentry_provider_observer.dart';
+import 'src/core/packages/supabase/supabase_provider.dart';
+import 'src/core/utils/window_utils.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await WindowUtils.register();
   await initializeRuntimeDeployConfig();
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  );
   LocaleSettings.useDeviceLocale();
 
   final app = ProviderScope(

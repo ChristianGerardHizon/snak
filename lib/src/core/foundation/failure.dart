@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:flutter/foundation.dart';
-import 'package:pocketbase/pocketbase.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'failure.mapper.dart';
 
@@ -19,13 +19,25 @@ sealed class Failure with FailureMappable {
     final error = message;
     var returnMessage = 'Something went wrong';
 
-    if (error is ClientException) {
+    if (error is PostgrestException) {
       if (kDebugMode) {
         debugPrint(error.toString());
       }
-      final defaultMessage = 'Server Request has failed';
-      final data = error.response;
-      returnMessage = data['message'] ?? defaultMessage;
+      returnMessage = error.message;
+    }
+
+    if (error is AuthException) {
+      if (kDebugMode) {
+        debugPrint(error.toString());
+      }
+      returnMessage = error.message;
+    }
+
+    if (error is StorageException) {
+      if (kDebugMode) {
+        debugPrint(error.toString());
+      }
+      returnMessage = error.message;
     }
 
     if (error is JsonUnsupportedObjectError) {
@@ -72,20 +84,24 @@ sealed class Failure with FailureMappable {
       if (kDebugMode) {
         debugPrint(error.message.toString());
       }
-
       return MapperFailure(error, stackTrace, 'mapper_error');
     }
 
-    // Handle known auth-related errors
-    if (error is ClientException) {
-      if (kDebugMode) {
-        debugPrint(error.response.toString());
-      }
+    if (error is AuthException) {
+      return AuthFailure(error, stackTrace, 'auth_error');
+    }
 
-      final code = error.statusCode;
-      if (code == 401 || code == 403) {
+    if (error is PostgrestException) {
+      final code = error.code;
+      // Postgres permission/JWT errors → AuthFailure
+      if (code == '42501' || code == 'PGRST301' || code == 'PGRST302') {
         return AuthFailure(error, stackTrace, 'auth_error');
       }
+      return DataFailure(error, stackTrace, 'data_error');
+    }
+
+    if (error is StorageException) {
+      return DataFailure(error, stackTrace, 'storage_error');
     }
 
     // Handle user-cancelled errors (e.g., platform cancel actions)
@@ -101,18 +117,8 @@ sealed class Failure with FailureMappable {
       return PresentationFailure(error, stackTrace, 'presentation_error');
     }
 
-    // Catch-all fallback
     return GenericFailure(error, stackTrace, 'generic_error');
   }
-}
-
-@MappableClass()
-class PocketbaseFailure extends Failure with PocketbaseFailureMappable {
-  const PocketbaseFailure([
-    dynamic message,
-    StackTrace? stackTrace,
-    String? identifier,
-  ]) : super(message, stackTrace, identifier);
 }
 
 @MappableClass()

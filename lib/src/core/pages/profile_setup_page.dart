@@ -2,9 +2,17 @@ import 'dart:math' show Random;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
+import '../routing/router.dart';
+import '../../features/health/data/health_records_repository.dart';
+import '../../features/health/data/health_reports_repository.dart';
+import '../../features/health/models/health_record.dart';
+import '../../features/health/models/health_report.dart';
+import '../../features/students/data/students_repository.dart';
+import '../../features/students/models/student.dart';
 import 'information_confirmation_page.dart';
 import 'measurement_instruction_page.dart';
 import 'checking_result_page.dart';
@@ -17,7 +25,7 @@ import '../widgets/common/snak_sprite_sheet.dart';
 ///
 /// Matches reference layout: logo, mascot + headline left, form grid right,
 /// primary action directly under the allergies field.
-class ProfileSetupPage extends StatefulWidget {
+class ProfileSetupPage extends ConsumerStatefulWidget {
   const ProfileSetupPage({
     super.key,
     required this.onComplete,
@@ -40,10 +48,10 @@ class ProfileSetupPage extends StatefulWidget {
   static const actionPink = Color(0xFFE85BB5);
 
   @override
-  State<ProfileSetupPage> createState() => _ProfileSetupPageState();
+  ConsumerState<ProfileSetupPage> createState() => _ProfileSetupPageState();
 }
 
-class _ProfileSetupPageState extends State<ProfileSetupPage> {
+class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   final _studentIdController = TextEditingController();
   final _ageController = TextEditingController();
   final _sectionController = TextEditingController();
@@ -57,6 +65,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   bool _showCheckingResult = false;
   bool _showMeasurementResult = false;
   MeasurementResultOutcome? _rolledMeasurementOutcome;
+  bool _persisting = false;
 
   @override
   void dispose() {
@@ -95,7 +104,122 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       _showCheckingResult = false;
       _showMeasurementResult = false;
       _rolledMeasurementOutcome = null;
+      _persisting = false;
     });
+  }
+
+  StudentSex? _mapSex(_ProfileSex? s) => switch (s) {
+        _ProfileSex.boy => StudentSex.male,
+        _ProfileSex.girl => StudentSex.female,
+        null => null,
+      };
+
+  /// Generate fake "machine reading" vitals matching the rolled outcome's spec.
+  ({double heightCm, double weightKg, double tempC, int hr, String bp})
+      _fakeVitals(MeasurementResultOutcome outcome) {
+    final r = Random();
+    final (baseHeight, baseWeight) = switch (outcome) {
+      MeasurementResultOutcome.underweight => (120, 18),
+      MeasurementResultOutcome.normal => (130, 28),
+      MeasurementResultOutcome.overweight => (135, 40),
+    };
+    final heightCm = baseHeight + r.nextDouble() * 4 - 2;
+    final weightKg = baseWeight + r.nextDouble() * 4 - 2;
+    final tempC = 36.4 + r.nextDouble() * 0.8;
+    final hr = 78 + r.nextInt(20);
+    final systolic = 100 + r.nextInt(20);
+    final diastolic = 65 + r.nextInt(15);
+    return (
+      heightCm: double.parse(heightCm.toStringAsFixed(1)),
+      weightKg: double.parse(weightKg.toStringAsFixed(1)),
+      tempC: double.parse(tempC.toStringAsFixed(1)),
+      hr: hr,
+      bp: '$systolic/$diastolic',
+    );
+  }
+
+  Future<void> _persistAndAdvance() async {
+    if (_persisting) return;
+    setState(() => _persisting = true);
+
+    // Roll the outcome now so the persisted vitals match what's displayed.
+    final outcome = MeasurementResultOutcome
+        .values[Random().nextInt(MeasurementResultOutcome.values.length)];
+    final v = _fakeVitals(outcome);
+
+    try {
+      final ageText = _ageController.text.trim();
+      final age = int.tryParse(ageText);
+      // Approximate DOB from age (Jan 1 of birth year) — schema needs `date`.
+      final dob = age == null
+          ? null
+          : DateTime(DateTime.now().year - age, 1, 1);
+
+      final studentId = _studentIdController.text.trim();
+      final allergies = _allergiesController.text.trim();
+
+      final draft = Student(
+        id: '',
+        firstName: studentId.isEmpty ? 'Student' : studentId,
+        lastName: '',
+        dateOfBirth: dob,
+        sex: _mapSex(_sex),
+        gradeLevel: _selectedGrade,
+        section: _sectionController.text.trim().isEmpty
+            ? null
+            : _sectionController.text.trim(),
+        studentNumber: studentId.isEmpty ? null : studentId,
+        notes: allergies.isEmpty ? null : 'Allergies: $allergies',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final saved =
+          await ref.read(studentsRepositoryProvider).create(draft);
+      final studentDbId = saved.id;
+
+      await ref.read(healthRecordsRepositoryProvider).create(
+            HealthRecord(
+              id: '',
+              studentId: studentDbId,
+              heightCm: v.heightCm,
+              weightKg: v.weightKg,
+              allergies: allergies.isEmpty ? null : allergies,
+              recordedAt: DateTime.now(),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
+
+      await ref.read(healthReportsRepositoryProvider).create(
+            HealthReport(
+              id: '',
+              studentId: studentDbId,
+              visitDate: DateTime.now(),
+              vitalsTempC: v.tempC,
+              vitalsBp: v.bp,
+              vitalsHr: v.hr,
+              diagnosis: outcome.name,
+              reportedBy: 'snak-machine',
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
+
+      if (!mounted) return;
+      setState(() {
+        _rolledMeasurementOutcome = outcome;
+        _persisting = false;
+        _showConfirmation = false;
+        _showMeasurementInstruction = true;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _persisting = false);
+      rootScaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(content: Text('Failed to save: $e')),
+      );
+    }
   }
 
   @override
@@ -111,8 +235,6 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       return CheckingResultPage(
         onComplete: () => setState(() {
           _showCheckingResult = false;
-          _rolledMeasurementOutcome = MeasurementResultOutcome
-              .values[Random().nextInt(MeasurementResultOutcome.values.length)];
           _showMeasurementResult = true;
         }),
       );
@@ -144,10 +266,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         grade: _selectedGrade ?? '',
         section: _sectionController.text.trim(),
         allergies: _allergiesDisplay(),
-        onConfirm: () => setState(() {
-          _showConfirmation = false;
-          _showMeasurementInstruction = true;
-        }),
+        onConfirm: _persisting ? () {} : _persistAndAdvance,
         onBack: () => setState(() => _showConfirmation = false),
       );
     }
