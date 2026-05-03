@@ -12,7 +12,7 @@ This is **Kwarta** (Dart package name `imbak`) — a Flutter multi-platform pers
 - **Framework:** Flutter
 - **State Management:** Hooks Riverpod
 - **Navigation:** GoRouter with go_router_builder
-- **Backend:** PocketBase (BaaS)
+- **Backend:** Supabase (BaaS)
 - **Serialization:** dart_mappable
 - **Forms:** flutter_form_builder
 - **Localization:** slang/slang_flutter
@@ -146,12 +146,6 @@ The goal is a clean layering: **features don't know about each other, and core w
 
 ### Models
 - Use `@MappableClass()` decorator from dart_mappable
-- Extend `PBObject` for PocketBase models
-- Include `collectionName` static constant
-
-### Database Field Naming
-- **Use camelCase** for PocketBase collection field names (e.g., `oldValue`, `newValue`, `productStock`)
-- Avoid snake_case in database fields
 
 ### Currency Formatting
 - **Use Philippine Peso (₱)** as the currency symbol throughout the application
@@ -159,8 +153,8 @@ The goal is a clean layering: **features don't know about each other, and core w
 - Example: `₱1,234.56`
 
 ### DateTime Handling
-- **To server:** Always use `.toUtc()` when sending DateTime to PocketBase
-- **From server:** Always use `.toLocal()` when parsing DateTime from PocketBase responses
+- **To server:** Always use `.toUtc()` when sending DateTime to the backend
+- **From server:** Always use `.toLocal()` when parsing DateTime from backend responses
 - Example:
   ```dart
   // Sending to server
@@ -347,9 +341,8 @@ Tests are located in `/test` directory mirroring the `lib/` structure.
 
 - `/lib/src/core/widgets/` - Reusable UI components
 - `/lib/src/core/routing/` - All route definitions
-- `/lib/src/core/packages/` - Package integrations (PocketBase, storage)
+- `/lib/src/core/packages/` - Package integrations (Supabase, storage)
 - `/assets/` - Static assets and icons
-- `/server/` - Backend server configurations
 
 ## Documentation
 
@@ -378,64 +371,6 @@ Example update for Recent Updates table:
 
 ## Testing
  check docs/testing.md for the testing account
-
-## PocketBase API Access
-
-**IMPORTANT:** When any PocketBase schema or data change is needed (creating collections, modifying fields, seeding data, etc.), **always use the PocketBase API directly** — never modify the database through migrations alone without verifying via the API first.
-
-### Test Superuser Credentials
-
-Credentials are stored in `.env` (gitignored — never commit this file):
-
-```
-PB_PROD_EMAIL=...
-PB_PROD_PASSWORD=...
-PB_STAGING_EMAIL=...
-PB_STAGING_PASSWORD=...
-```
-
-### Authenticating
-
-```bash
-# Load credentials from .env and authenticate
-source .env
-curl -X POST http://127.0.0.1:8091/api/admins/auth-with-password \
-  -H "Content-Type: application/json" \
-  -d "{\"identity\":\"$PB_PROD_EMAIL\",\"password\":\"$PB_PROD_PASSWORD\"}"
-```
-
-Use the returned `token` as a Bearer token for subsequent requests:
-
-```bash
-curl -H "Authorization: Bearer <token>" http://127.0.0.1:8091/api/collections
-```
-
-### Guidelines
-
-- **Always use the test superuser** from `.env` for API interactions during development
-- **Prefer the PocketBase API** over direct DB manipulation for schema changes, collection management, and data seeding
-- **Do not add new `server/pb_migrations/*.js` files for routine schema work** — apply collection changes with the Admin API (dashboard or scripted), consistent with the rest of this project’s workflow.
-- `.env` is gitignored — keep credentials out of source control
-
-### Soft delete (PocketBase)
-
-For **new base collections** (and when extending existing ones via the API):
-
-1. Add a non-required bool field **`isDeleted`** (camelCase; default effectively false for existing rows).
-2. Set **`deleteRule`** to the literal rule **`false`** so API clients cannot hard-delete records (superusers can still remove rows from the dashboard if needed).
-3. Extend **`listRule`** and **`viewRule`** so soft-deleted rows are invisible to clients, e.g. append **`&& isDeleted != true`** to whatever access rule you already use. Leave **`listRule` / `viewRule` null or empty** only when the collection is intentionally admin-only with no API rule.
-4. **Soft delete in the app** is implemented by **`PATCH` / `update` with `{ "isDeleted": true }`**, not `DELETE`.
-5. **Views** that read underlying tables should filter out deleted rows in SQL, e.g. **`AND COALESCE(isDeleted, false) = false`**.
-
-**Apply finance collections + account-totals view** (dry run, then apply):
-
-```bash
-dart run tool/pb_apply_soft_delete.dart --env-file .env
-dart run tool/pb_apply_soft_delete.dart --env-file .env --yes
-```
-
-Optional: `--url`, `--email`, `--password` override env defaults (see script header in `tool/pb_apply_soft_delete.dart`).
-
 
 ## grepai - Semantic Code Search
 

@@ -11,76 +11,17 @@
             "program": "lib/main.dart",
             "args": [
                 "--web-port=8000",
-                "--flavor=dev",
                 "--dart-define=ENV=dev",
-                "--dart-define=API_URL=http://127.0.0.1:8091",
                 "--dart-define=SKIP_VERSION_CHECK=true"
             ]
         },
         {
-            "name": "zerotier",
+            "name": "dev (macos)",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
             "args": [
-                "--web-port=8000",
-                "--flavor=dev",
                 "--dart-define=ENV=dev",
-                "--dart-define=API_URL=http://192.168.194.230:8091",
-                "--dart-define=SKIP_VERSION_CHECK=true"
-            ]
-        },
-        {
-            "name": "staging",
-            "request": "launch",
-            "type": "dart",
-            "program": "lib/main.dart",
-            "args": [
-                "--web-port=8000",
-                "--flavor=dev",
-                "--dart-define=ENV=staging",
-                "--dart-define=API_URL=https://staging.snak.hznsystems.com",
-                "--dart-define=SKIP_VERSION_CHECK=true"
-            ]
-        },
-        {
-            "name": "staging | release",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release",
-            "program": "lib/main.dart",
-            "args": [
-                "--web-port=8000",
-                "--flavor=dev",
-                "--dart-define=ENV=staging",
-                "--dart-define=API_URL=https://staging.snak.hznsystems.com",
-                "--dart-define=SKIP_VERSION_CHECK=true"
-            ]
-        },
-        {
-            "name": "prod (local test)",
-            "request": "launch",
-            "type": "dart",
-            "program": "lib/main.dart",
-            "args": [
-                "--web-port=8000",
-                "--flavor=dev",
-                "--dart-define=ENV=prod",
-                "--dart-define=API_URL=https://snak.hznsystems.com",
-                "--dart-define=SKIP_VERSION_CHECK=true"
-            ]
-        },
-        {
-            "name": "prod | release",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release",
-            "program": "lib/main.dart",
-            "args": [
-                "--web-port=8000",
-                "--flavor=dev",
-                "--dart-define=ENV=prod",
-                "--dart-define=API_URL=https://snak.hznsystems.com",
                 "--dart-define=SKIP_VERSION_CHECK=true"
             ]
         },
