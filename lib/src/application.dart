@@ -88,6 +88,11 @@ class Application extends HookConsumerWidget {
                           showProfileSetup.value = false;
                           showHealthConsent.value = true;
                         },
+                        onReturnToStart: () {
+                          showProfileSetup.value = false;
+                          showHealthConsent.value = false;
+                          continueAfterLanding.value = false;
+                        },
                       ),
                     )
                   : MaterialApp.router(

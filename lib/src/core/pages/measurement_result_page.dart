@@ -1,9 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/snak_pill_button.dart';
+
+/// Base URL for hosted health reports. Override via:
+/// `--dart-define=SNAK_REPORT_BASE_URL=https://your.host/r`
+const String _reportBaseUrl = String.fromEnvironment(
+  'SNAK_REPORT_BASE_URL',
+  defaultValue: 'https://snak.app/r',
+);
+
+String _reportUrl(String reportId) => '$_reportBaseUrl/$reportId';
 
 /// BMI-style result for [MeasurementResultPage] (Health Findings).
 enum MeasurementResultOutcome {
@@ -18,10 +31,12 @@ class MeasurementResultPage extends StatelessWidget {
     super.key,
     required this.outcome,
     required this.onDone,
+    this.reportId,
   });
 
   final MeasurementResultOutcome outcome;
   final VoidCallback onDone;
+  final String? reportId;
 
   static const _ink = Color(0xFF1A1A1A);
   static const _cream = Color(0xFFFFF6E8);
@@ -46,14 +61,14 @@ class MeasurementResultPage extends StatelessWidget {
         final logoH = logoW / SnakLogoRaster.aspect;
         final skyH = (maxW * 0.52).clamp(200.0, 280.0);
 
-        final titleSize = (maxW * 0.05).clamp(17.0, 24.0).toDouble();
-        final bodySize = (maxW * 0.038).clamp(14.0, 17.0).toDouble();
-        final bmiLabelSize = (maxW * 0.032).clamp(12.0, 15.0).toDouble();
-        final bmiMainSize = (maxW * 0.065).clamp(22.0, 34.0).toDouble();
-        final bmiSubSize = (maxW * 0.036).clamp(13.0, 17.0).toDouble();
+        final titleSize = (maxW * 0.05).clamp(17.0, 30.0).toDouble();
+        final bodySize = (maxW * 0.038).clamp(14.0, 22.0).toDouble();
+        final bmiLabelSize = (maxW * 0.032).clamp(12.0, 18.0).toDouble();
+        final bmiMainSize = (maxW * 0.065).clamp(22.0, 42.0).toDouble();
+        final bmiSubSize = (maxW * 0.036).clamp(13.0, 21.0).toDouble();
 
-        final buttonW = (maxW * 0.82).clamp(260.0, 440.0).toDouble();
-        final buttonH = (buttonW / 4.4).clamp(50.0, 72.0).toDouble();
+        final buttonW = (maxW * 0.82).clamp(260.0, 560.0).toDouble();
+        final buttonH = (buttonW / 4.4).clamp(50.0, 90.0).toDouble();
 
         return ColoredBox(
           color: _cream,
@@ -240,6 +255,16 @@ class MeasurementResultPage extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: edge * 1.0),
+                        if (reportId != null) ...[
+                          _ReportActions(
+                            reportId: reportId!,
+                            outcome: outcome,
+                            spec: spec,
+                            stamp: stamp,
+                            buttonW: buttonW,
+                          ),
+                          SizedBox(height: edge * 0.8),
+                        ],
                         Center(
                           child: SnakPillButton(
                             label: 'DONE',
@@ -669,6 +694,297 @@ class _TipsPanel extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReportActions extends StatelessWidget {
+  const _ReportActions({
+    required this.reportId,
+    required this.outcome,
+    required this.spec,
+    required this.stamp,
+    required this.buttonW,
+  });
+
+  final String reportId;
+  final MeasurementResultOutcome outcome;
+  final _HealthSpec spec;
+  final String stamp;
+  final double buttonW;
+
+  Future<void> _showQr(BuildContext context) async {
+    final url = _reportUrl(reportId);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Scan to view report'),
+        content: SizedBox(
+          width: 280,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 240,
+                height: 240,
+                child: QrImageView(
+                  data: url,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Scan this QR code on the Snak app to view the report.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _downloadPdf() async {
+    final url = _reportUrl(reportId);
+    final doc = pw.Document();
+
+    PdfColor c(Color v) => PdfColor.fromInt(v.toARGB32());
+    final ink = c(MeasurementResultPage._ink);
+    final cream = c(MeasurementResultPage._cream);
+    final panelTop = c(MeasurementResultPage._panelTop);
+    final panelBottom = c(MeasurementResultPage._panelBottom);
+    final bmiTop = c(spec.bmiGradient.first);
+    final bmiBottom = c(spec.bmiGradient.last);
+    final bmiBorder = c(spec.bmiBorder);
+
+    pw.Widget measureRow(String label, String value) {
+      return pw.Padding(
+        padding: const pw.EdgeInsets.symmetric(vertical: 4),
+        child: pw.Row(
+          children: [
+            pw.Text(label,
+                style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold, fontSize: 13, color: ink)),
+            pw.Spacer(),
+            pw.Text(value,
+                style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold, fontSize: 13, color: ink)),
+          ],
+        ),
+      );
+    }
+
+    pw.Widget dottedDivider() => pw.Container(
+          height: 1,
+          decoration: pw.BoxDecoration(
+            border: pw.Border(
+              bottom: pw.BorderSide(color: ink, width: 1, style: pw.BorderStyle.dashed),
+            ),
+          ),
+        );
+
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (ctx) => pw.Container(
+          decoration: pw.BoxDecoration(
+            gradient: pw.LinearGradient(
+              begin: pw.Alignment.topCenter,
+              end: pw.Alignment.bottomCenter,
+              colors: [cream, panelTop, panelBottom],
+              stops: const [0.0, 0.15, 1.0],
+            ),
+          ),
+          padding: const pw.EdgeInsets.all(28),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+            children: [
+              pw.Center(
+                child: pw.Text(
+                  'HEALTH FINDINGS:',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                    color: ink,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 4),
+              pw.Center(
+                child: pw.Text(
+                  stamp,
+                  style: pw.TextStyle(
+                    fontSize: 11,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColor.fromInt(0xFF555555),
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 16),
+              dottedDivider(),
+              pw.SizedBox(height: 14),
+              pw.Text('MEASUREMENTS:',
+                  style: pw.TextStyle(
+                      fontSize: 16, fontWeight: pw.FontWeight.bold, color: ink)),
+              pw.SizedBox(height: 6),
+              measureRow('HEIGHT:', '${spec.heightCm} cm'),
+              measureRow('WEIGHT:', '${spec.weightKg} kg'),
+              pw.SizedBox(height: 14),
+              dottedDivider(),
+              pw.SizedBox(height: 14),
+              pw.Container(
+                decoration: pw.BoxDecoration(
+                  gradient: pw.LinearGradient(
+                    begin: pw.Alignment.topLeft,
+                    end: pw.Alignment.bottomRight,
+                    colors: [bmiTop, bmiBottom],
+                  ),
+                  borderRadius: pw.BorderRadius.circular(16),
+                  border: pw.Border.all(color: bmiBorder, width: 2),
+                ),
+                padding: const pw.EdgeInsets.all(16),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('YOUR BMI CATEGORY IS:',
+                        style: pw.TextStyle(
+                            fontSize: 11,
+                            fontWeight: pw.FontWeight.bold,
+                            color: ink)),
+                    pw.SizedBox(height: 4),
+                    pw.Text(spec.categoryTitle,
+                        style: pw.TextStyle(
+                            fontSize: 22,
+                            fontWeight: pw.FontWeight.bold,
+                            color: ink)),
+                    pw.SizedBox(height: 2),
+                    pw.Text(spec.categorySubtitle,
+                        style: pw.TextStyle(
+                            fontSize: 11,
+                            fontWeight: pw.FontWeight.bold,
+                            color: ink)),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 14),
+              pw.Container(
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.white,
+                  borderRadius: pw.BorderRadius.circular(14),
+                  border: pw.Border.all(
+                      color: PdfColor.fromInt(0x14000000), width: 1),
+                ),
+                padding: const pw.EdgeInsets.all(14),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('TIPS:',
+                        style: pw.TextStyle(
+                            fontSize: 13,
+                            fontWeight: pw.FontWeight.bold,
+                            color: ink)),
+                    pw.SizedBox(height: 6),
+                    for (final t in spec.tips)
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('• $t',
+                            style: pw.TextStyle(
+                              fontSize: 11,
+                              color: ink,
+                              lineSpacing: 2,
+                            )),
+                      ),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 14),
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.symmetric(
+                    vertical: 12, horizontal: 12),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.white,
+                  borderRadius: pw.BorderRadius.circular(12),
+                  border: pw.Border.all(
+                      color: PdfColor.fromInt(0x14000000), width: 1),
+                ),
+                child: pw.Center(
+                  child: pw.Text(
+                    spec.footer,
+                    style: pw.TextStyle(
+                        fontSize: 14,
+                        fontWeight: pw.FontWeight.bold,
+                        color: ink,
+                        letterSpacing: 0.4),
+                  ),
+                ),
+              ),
+              pw.Spacer(),
+              pw.Center(
+                child: pw.Column(children: [
+                  pw.BarcodeWidget(
+                    barcode: pw.Barcode.qrCode(),
+                    data: url,
+                    width: 110,
+                    height: 110,
+                  ),
+                  pw.SizedBox(height: 6),
+                  pw.Text('Scan this QR code on the Snak app to view the report.',
+                      style: pw.TextStyle(
+                          fontSize: 10, color: PdfColor.fromInt(0xFF555555))),
+                ]),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await Printing.sharePdf(
+      bytes: await doc.save(),
+      filename: 'snak-report-$reportId.pdf',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final btnH = (buttonW / 5.5).clamp(40.0, 64.0).toDouble();
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: buttonW),
+        child: Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: btnH,
+                child: OutlinedButton.icon(
+                  onPressed: () => _showQr(context),
+                  icon: const Icon(Icons.qr_code_2_rounded),
+                  label: const Text('VIEW QR'),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: btnH,
+                child: OutlinedButton.icon(
+                  onPressed: _downloadPdf,
+                  icon: const Icon(Icons.picture_as_pdf_rounded),
+                  label: const Text('DOWNLOAD PDF'),
+                ),
+              ),
             ),
           ],
         ),
