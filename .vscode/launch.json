@@ -1,0 +1,111 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "dev",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-port=8000",
+                "--flavor=dev",
+                "--dart-define=ENV=dev",
+                "--dart-define=API_URL=http://127.0.0.1:8091",
+                "--dart-define=SKIP_VERSION_CHECK=true"
+            ]
+        },
+        {
+            "name": "zerotier",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-port=8000",
+                "--flavor=dev",
+                "--dart-define=ENV=dev",
+                "--dart-define=API_URL=http://192.168.194.230:8091",
+                "--dart-define=SKIP_VERSION_CHECK=true"
+            ]
+        },
+        {
+            "name": "staging",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-port=8000",
+                "--flavor=dev",
+                "--dart-define=ENV=staging",
+                "--dart-define=API_URL=https://staging.snak.hznsystems.com",
+                "--dart-define=SKIP_VERSION_CHECK=true"
+            ]
+        },
+        {
+            "name": "staging | release",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-port=8000",
+                "--flavor=dev",
+                "--dart-define=ENV=staging",
+                "--dart-define=API_URL=https://staging.snak.hznsystems.com",
+                "--dart-define=SKIP_VERSION_CHECK=true"
+            ]
+        },
+        {
+            "name": "prod (local test)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-port=8000",
+                "--flavor=dev",
+                "--dart-define=ENV=prod",
+                "--dart-define=API_URL=https://snak.hznsystems.com",
+                "--dart-define=SKIP_VERSION_CHECK=true"
+            ]
+        },
+        {
+            "name": "prod | release",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-port=8000",
+                "--flavor=dev",
+                "--dart-define=ENV=prod",
+                "--dart-define=API_URL=https://snak.hznsystems.com",
+                "--dart-define=SKIP_VERSION_CHECK=true"
+            ]
+        },
+        {
+            "name": "profile mode",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile",
+            "program": "lib/main.dart"
+        },
+        {
+            "name": "release mode",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "program": "lib/main.dart"
+        },
+        {
+            "name": "example app",
+            "request": "launch",
+            "type": "dart",
+            "program": "docs/examples/main_example.dart",
+            "args": [
+                "--web-port=8001"
+            ]
+        }
+    ]
+}

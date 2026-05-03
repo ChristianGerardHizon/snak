@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dart:*)",
+      "Bash(flutter:*)",
+      "Bash(dart pub:*)",
+      "Bash(flutter pub:*)",
+      "Bash(dart run build_runner:*)",
+      "Bash(dart format:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(git:*)",
+      "mcp__dart__*"
+    ],
+    "deny": []
+  },
+  "enabledPlugins": {
+    "github@claude-plugins-official": true
+  }
+}

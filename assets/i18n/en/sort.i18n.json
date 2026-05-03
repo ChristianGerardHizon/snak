@@ -1,0 +1,14 @@
+{
+    "sortBy": "Sort By",
+    "direction": "Direction",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "dateAdded": "Date Added",
+    "lastUpdated": "Last Updated",
+    "date": "Date",
+    "amount": "Amount",
+    "price": "Price",
+    "stock": "Stock",
+    "expiration": "Expiration",
+    "status": "Status"
+}

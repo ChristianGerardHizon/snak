@@ -1,0 +1,22 @@
+{
+    "userName": "Username",
+    "email": "Email",
+    "password": "Password",
+    "passwordConfirmation": "Password confirmation",
+    "name": "Name",
+    "owner": "Owner",
+    "species": "Species",
+    "breed": "Breed",
+    "contactNumber": "Contact Number",
+    "address": "Address",
+    "searchFields": "Search Fields",
+    "searchFieldsHint": "Select which fields to include in your search",
+    "requiredField": "Required",
+    "atLeastOneRequired": "At least one field required",
+    "receiptNumber": "Receipt Number",
+    "customerName": "Customer Name",
+    "paymentRef": "Payment Reference",
+    "notes": "Notes",
+    "description": "Description",
+    "category": "Category"
+}

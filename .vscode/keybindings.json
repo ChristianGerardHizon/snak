@@ -1,0 +1,60 @@
+// Place your key bindings in this file to override the defaults
+[
+  {
+      "key": "shift+cmd+l",
+      "command": "-editor.action.selectHighlights",
+      "when": "editorFocus"
+  },
+  {
+      "key": "shift+cmd+l",
+      "command": "editor.action.formatDocument",
+      "when": "editorFocus"
+  },
+  {
+      "key": "alt+=",
+      "command": "explorer.newFolder"
+  },
+  {
+      "key": "alt+-",
+      "command": "explorer.newFile"
+  },
+  {
+      "key": "shift+cmd+k",
+      "command": "windsurf.prioritized.chat.openNewConversation", // Replace with the actual Cascade command if different
+      "when": "editorTextFocus"
+  },
+  {
+      "key": "shift+cmd+l",
+      "command": "editor.action.formatDocument",
+      "when": "editorTextFocus"
+  },
+  {
+      "key": "shift+cmd+k",
+      "command": "windsurf.openCascade"
+  },
+  {
+      "key": "cmd+l",
+      "command": "-windsurf.prioritized.chat.open",
+      "when": "!terminalFocus"
+  },
+  {
+      "key": "cmd+l",
+      "command": "-windsurf.prioritized.chat.openFromTerminal",
+      "when": "terminalFocus"
+  },
+  {
+      "key": "shift+cmd+l",
+      "command": "-windsurf.prioritized.chat.openNewConversationFromTerminal",
+      "when": "terminalFocus"
+  },
+  {
+      "key": "shift+cmd+l",
+      "command": "-windsurf.prioritized.chat.openNewConversation",
+      "when": "!terminalFocus"
+  },
+  {
+      "key": "shift+cmd+l",
+      "command": "-addCursorsAtSearchResults",
+      "when": "fileMatchOrMatchFocus && searchViewletVisible"
+  }
+]

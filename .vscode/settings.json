@@ -1,0 +1,152 @@
+{
+    "files.exclude": {},
+    "editor.foldingStrategy": "indentation",
+    "editor.foldingImportsByDefault": true,
+    "explorer.fileNesting.expand": false,
+    "outline.collapseItems": "alwaysCollapse",
+    "explorer.fileNesting.patterns": {
+        "pubspec.yaml": "flutter_launcher_icons.yaml,  package_rename_config.yaml, analysis_options.yaml, build.yaml,  pubspec.lock,pubspec_overrides.yaml,.packages,.flutter-plugins,.flutter-plugins-dependencies,.metadata",
+        "*.dart": "${capture}.freezed.dart, ${capture}.g.dart, ${capture}.realm.dart, ${capture}.mapper.dart"
+    },
+    "dartBarrelFileGenerator.defaultBarrelName": "_index",
+    "workbench.sideBar.location": "left",
+    "emmet.excludeLanguages": [
+        "markdown",
+        "dart",
+        "flutter"
+    ],
+    "workbench.editor.closeOnFileDelete": true,
+    "dart.renameFilesWithClasses": "prompt",
+    "extensions.ignoreRecommendations": true,
+    "explorer.fileNesting.enabled": true,
+    "workbench.tree.indent": 20,
+    "better-comments.tags": [
+        {
+            "tag": "/section",
+            "color": "#4287f5",
+            "strikethrough": false,
+            "underline": false,
+            "backgroundColor": "transparent",
+            "bold": true,
+            "italic": false
+        },
+        {
+            "tag": "/!",
+            "color": "#FF2D00",
+            "strikethrough": false,
+            "underline": false,
+            "backgroundColor": "transparent",
+            "bold": false,
+            "italic": false
+        },
+        {
+            "tag": "/?",
+            "color": "#3498DB",
+            "strikethrough": false,
+            "underline": false,
+            "backgroundColor": "transparent",
+            "bold": false,
+            "italic": false
+        },
+        {
+            "tag": "//",
+            "color": "#474747",
+            "strikethrough": true,
+            "underline": false,
+            "backgroundColor": "transparent",
+            "bold": false,
+            "italic": false
+        },
+        {
+            "tag": "///",
+            "color": "#474747",
+            "strikethrough": true,
+            "underline": false,
+            "backgroundColor": "transparent",
+            "bold": false,
+            "italic": false
+        },
+        {
+            "tag": "/*",
+            "color": "#98C379",
+            "strikethrough": false,
+            "underline": false,
+            "backgroundColor": "transparent",
+            "bold": false,
+            "italic": false
+        }
+    ],
+    "dartBarrelFileGenerator.excludeFileList": [
+        "**/*.realm.dart",
+        "**/*.freezed.dart",
+        "**/*.g.dart",
+        "**/*.mapper.dart",
+        "**/*.routes.dart",
+    ],
+    "dartBarrelFileGenerator.excludeGenerated": true,
+    "dartBarrelFileGenerator.excludeFreezed": true,
+    "cSpell.words": [
+        "barcodes",
+        "byteme",
+        "ejson",
+        "fullscreen",
+        "gymhub",
+        "numberpicker",
+        "orderlines",
+        "Overscroll",
+        "projectlines",
+        "scanview",
+        "searchfield",
+        "skeletonizer",
+        "timesheets",
+        "typeahead"
+    ],
+    "editor.semanticHighlighting.enabled": true,
+    // Add slight contrast to the active line
+    "editor.renderLineHighlight": "all",
+    "editor.multiCursorModifier": "alt",
+    "editor.minimap.enabled": false,
+    "editor.guides.bracketPairs": "active",
+    "editor.guides.highlightActiveBracketPair": true
+    // Set to nu shell
+    // "terminal.integrated.defaultProfile.windows": "NuShell",
+    // "terminal.integrated.defaultProfile.linux": "NuShell",
+    // "terminal.integrated.defaultProfile.osx": "NuShell",
+    // "terminal.integrated.profiles.windows": {
+    //     "NuShell": {
+    //         "path": "C:\\Program Files\\nu\\bin\\nu.exe"
+    //     }
+    // },
+    // "terminal.integrated.profiles.linux": {
+    //     "NuShell": {
+    //         "path": "C:\\Program Files\\nu\\bin\\nu.exe"
+    //     }
+    // },
+    // "terminal.integrated.profiles.osx": {
+    //     "NuShell": {
+    //         "path": "C:\\Program Files\\nu\\bin\\nu.exe"
+    //     }
+    // }
+    ,
+    "custom-auto-fold.rules": [
+        {
+            // apply to Dart files
+            "fileGlob": "**/*.dart",
+            // fold at lines starting with `import `
+            "linePattern": "^import\\s",
+            // fold every import block it sees
+            "firstMatchOnly": false
+        }
+    ],
+    "dart-barrel-file-generator.excludeFileList": [
+        "**/*.realm.dart",
+        "**/*.freezed.dart",
+        "**/*.g.dart",
+        "**/*.mapper.dart",
+        "**/*.routes.dart",
+    ],
+    "dart-barrel-file-generator.defaultBarrelName": "_index",
+    "dart-barrel-file-generator.excludeGenerated": true,
+    "dart-barrel-file-generator.excludeFreezed": true,
+    "dart-barrel-file-generator.promptName": true
+}

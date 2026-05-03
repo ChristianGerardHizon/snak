@@ -1,0 +1,32 @@
+{
+    "pageTitle": "Login",
+    "loginButton": "Login",
+    "loginAsAdminList": [
+        "Not a user? ",
+        "Login as Administrator"
+    ],
+    "returnToLoginAsUser": [
+        "Not an administrator? ",
+        "Login as User"
+    ],
+    "loginSuccess": "Logged in successfully",
+    "logoutButton": "Logout",
+    "logoutConfirm": "Are you sure you want to logout?",
+    "forgotPassword": "Forgot Password?",
+    "forgotPasswordTitle": "Forgot Password",
+    "forgotPasswordSubtitle": "Enter your email address and we'll send you a link to reset your password.",
+    "sendResetLink": "Send Reset Link",
+    "backToLogin": "Back to Login",
+    "checkEmail": "Check Your Email",
+    "resetLinkSent(email)": "Password reset link has been sent to $email",
+    "signInToContinue": "Sign in to continue",
+    "signingIn": "Signing in...",
+    "verificationEmailSent": "A verification email has been sent to your email address",
+    "signUp": "Sign Up",
+    "signUpButton": "Create Account",
+    "signUpSubtitle": "Create an account to get started",
+    "alreadyHaveAccount": "Already have an account? Sign in",
+    "dontHaveAccount": "Don't have an account? Sign up",
+    "signUpSuccess": "Account created! Please check your email to verify.",
+    "passwordsDoNotMatch": "Passwords do not match"
+}

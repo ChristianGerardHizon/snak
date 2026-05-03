@@ -1,0 +1,22 @@
+linter:
+  rules:
+    # turn the rule off completely:
+    - avoid_manual_providers_as_generated_provider_dependency: false
+
+analyzer:
+  plugins:
+    - custom_lint
+  errors:
+    invalid_annotation_target: ignore
+  exclude:
+    - 'old_lib/**'
+    - '**/_index.dart'
+    - '**.freezed.dart'
+    - '**.g.dart'
+    - '**.gr.dart'
+    - '**.mapper.dart'
+    - '**.gen.dart'
+    - '**/generated_plugin_registrant.dart'
+custom_lint:
+  enable_all_lint_rules: true
+
