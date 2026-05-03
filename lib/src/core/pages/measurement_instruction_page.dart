@@ -46,10 +46,10 @@ class MeasurementInstructionPage extends StatelessWidget {
           final mascotH = (maxH * 0.63).clamp(200.0, 420.0).toDouble();
           final mascotW = mascotH * cellAspect;
 
-          final panelW = (maxW * 0.56).clamp(288.0, 520.0).toDouble();
-          final panelH = (maxH * 0.48).clamp(184.0, 320.0).toDouble();
+          final panelW = (maxW * 0.56).clamp(288.0, 640.0).toDouble();
+          final panelH = (maxH * 0.48).clamp(184.0, 380.0).toDouble();
 
-          final buttonWidth = (panelW * 0.66).clamp(200.0, 320.0).toDouble();
+          final buttonWidth = (panelW * 0.66).clamp(200.0, 380.0).toDouble();
           final buttonHeight =
               (buttonWidth / 3.45).clamp(60.0, 104.0).toDouble();
 

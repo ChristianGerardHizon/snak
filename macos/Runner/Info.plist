@@ -40,5 +40,7 @@
 	<string>Connect to thermal receipt printers via Bluetooth</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Connect to network thermal printers on your local network</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is needed to scan report QR codes.</string>
 </dict>
 </plist>

@@ -17,6 +17,7 @@ class AppInitializationPage extends StatelessWidget {
     required this.onConsentBack,
     required this.onProfileComplete,
     required this.onProfileBack,
+    required this.onReturnToStart,
     this.measurementResultOutcome = MeasurementResultOutcome.normal,
   });
 
@@ -28,6 +29,7 @@ class AppInitializationPage extends StatelessWidget {
   final VoidCallback onConsentBack;
   final VoidCallback onProfileComplete;
   final VoidCallback onProfileBack;
+  final VoidCallback onReturnToStart;
 
   /// Shown after the checking screen; swap when measurement is wired.
   final MeasurementResultOutcome measurementResultOutcome;
@@ -38,6 +40,7 @@ class AppInitializationPage extends StatelessWidget {
       return ProfileSetupPage(
         onComplete: onProfileComplete,
         onBack: onProfileBack,
+        onReturnToStart: onReturnToStart,
         measurementResultOutcome: measurementResultOutcome,
       );
     }

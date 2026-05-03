@@ -70,40 +70,105 @@ class HealthMonitoringConsentPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Center(
+                  Positioned.fill(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final availableW = constraints.maxWidth;
                         final availableH = constraints.maxHeight;
-                        final spriteH =
-                            (availableH * 0.55).clamp(220.0, 460.0).toDouble();
+                        final hPad = edgePad * 1.2;
+                        final innerW = availableW - hPad * 2;
                         final cellAspect = SnakSpriteSheet.cellWidth /
                             SnakSpriteSheet.cellHeight;
-                        final spriteW = spriteH * cellAspect;
-                        final panelW =
-                            (availableW * 0.46).clamp(280.0, 520.0).toDouble();
 
-                        return Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: edgePad * 1.2,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              SnakSpriteSheet.happy(
-                                width: spriteW,
-                                height: spriteH,
-                              ),
-                              SizedBox(width: edgePad * 0.6),
-                              SizedBox(
-                                width: panelW,
-                                child: _ConsentPanel(
-                                  color: _panelBlue,
-                                  message: _consentMessage,
+                        // Reserve space for the bottom buttons + logo.
+                        final reservedTop = logoHeight + edgePad * 1.2;
+                        final reservedBottom =
+                            buttonHeight + size.height * 0.04 + edgePad * 1.2;
+                        final usableH =
+                            (availableH - reservedTop - reservedBottom)
+                                .clamp(260.0, double.infinity);
+
+                        // Phones: stack sprite above panel.
+                        final stack = availableW < 600;
+
+                        if (stack) {
+                          var spriteH = (usableH * 0.46)
+                              .clamp(160.0, 280.0)
+                              .toDouble();
+                          var spriteW = spriteH * cellAspect;
+                          if (spriteW > innerW) {
+                            spriteW = innerW;
+                            spriteH = spriteW / cellAspect;
+                          }
+                          final panelW =
+                              innerW.clamp(240.0, 520.0).toDouble();
+
+                          return Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              hPad,
+                              reservedTop,
+                              hPad,
+                              reservedBottom,
+                            ),
+                            child: Center(
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SnakSpriteSheet.happy(
+                                      width: spriteW,
+                                      height: spriteH,
+                                    ),
+                                    SizedBox(height: edgePad * 0.8),
+                                    SizedBox(
+                                      width: panelW,
+                                      child: _ConsentPanel(
+                                        color: _panelBlue,
+                                        message: _consentMessage,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
+                            ),
+                          );
+                        }
+
+                        // Tablets/desktop: sprite + panel side-by-side.
+                        final gap = edgePad * 0.6;
+                        var spriteH =
+                            (availableH * 0.55).clamp(220.0, 460.0).toDouble();
+                        var spriteW = spriteH * cellAspect;
+                        final maxSpriteW = (innerW - gap) * 0.5;
+                        if (spriteW > maxSpriteW) {
+                          spriteW = maxSpriteW;
+                          spriteH = spriteW / cellAspect;
+                        }
+                        final panelW = (innerW - gap - spriteW)
+                            .clamp(220.0, 520.0)
+                            .toDouble();
+
+                        return Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: hPad),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SnakSpriteSheet.happy(
+                                  width: spriteW,
+                                  height: spriteH,
+                                ),
+                                SizedBox(width: gap),
+                                SizedBox(
+                                  width: panelW,
+                                  child: _ConsentPanel(
+                                    color: _panelBlue,
+                                    message: _consentMessage,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },

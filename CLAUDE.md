@@ -12,7 +12,7 @@ This is **Kwarta** (Dart package name `imbak`) — a Flutter multi-platform pers
 - **Framework:** Flutter
 - **State Management:** Hooks Riverpod
 - **Navigation:** GoRouter with go_router_builder
-- **Backend:** PocketBase (BaaS)
+- **Backend:** Supabase (BaaS)
 - **Serialization:** dart_mappable
 - **Forms:** flutter_form_builder
 - **Localization:** slang/slang_flutter
@@ -146,12 +146,6 @@ The goal is a clean layering: **features don't know about each other, and core w
 
 ### Models
 - Use `@MappableClass()` decorator from dart_mappable
-- Extend `PBObject` for PocketBase models
-- Include `collectionName` static constant
-
-### Database Field Naming
-- **Use camelCase** for PocketBase collection field names (e.g., `oldValue`, `newValue`, `productStock`)
-- Avoid snake_case in database fields
 
 ### Currency Formatting
 - **Use Philippine Peso (₱)** as the currency symbol throughout the application
@@ -159,8 +153,8 @@ The goal is a clean layering: **features don't know about each other, and core w
 - Example: `₱1,234.56`
 
 ### DateTime Handling
-- **To server:** Always use `.toUtc()` when sending DateTime to PocketBase
-- **From server:** Always use `.toLocal()` when parsing DateTime from PocketBase responses
+- **To server:** Always use `.toUtc()` when sending DateTime to the backend
+- **From server:** Always use `.toLocal()` when parsing DateTime from backend responses
 - Example:
   ```dart
   // Sending to server
@@ -307,26 +301,13 @@ return ScaffoldMessenger(
 
 ## Pull Requests
 
-- **All PRs must target the `staging` branch**, not `main`.
-- When creating PRs with `gh pr create`, always use `--base staging`.
-- **Before creating a PR, always ask the user ALL of the following questions:**
-
-  1. **Version label** (required question):
-     - `version:patch` — Bug fixes, small tweaks (e.g., `1.2.3` → `1.2.4`)
-     - `version:minor` — New features, enhancements (e.g., `1.2.3` → `1.3.0`)
-     - `version:major` — Breaking changes, major releases (e.g., `1.2.3` → `2.0.0`)
-     - **No label** — Skip deploy; the PR will merge without triggering a build (staging only)
-     - For PRs targeting `main`, a version label is **required** — the deploy will fail without one.
-
-  2. **Deploy to production?** (required question):
-     - **Yes** — Add the `deploy` label. After staging merge, a staging→main PR is auto-created with version labels forwarded.
-     - **No** — Only deploy to staging; no auto-promotion to main.
-
-  3. **Set as minimum version?** (required question):
-     - **Yes** — Add the `minimum version` label. Forces all users on older versions to update.
-     - **No** — Users on older versions can continue without updating.
-
-  - Add labels using: `gh pr edit <number> --add-label "version:patch,deploy,minimum version"`
+- PRs target `main`. Merging to `main` triggers a web build that deploys to GitHub Pages via `.github/workflows/deploy.yml`.
+- **Every PR must have exactly one version label** — the deploy workflow reads it to bump the latest `vX.Y.Z` git tag and create a matching GitHub Release:
+  - `version:patch` — bug fixes (e.g., `1.2.3` → `1.2.4`)
+  - `version:minor` — new features (e.g., `1.2.3` → `1.3.0`)
+  - `version:major` — breaking changes (e.g., `1.2.3` → `2.0.0`)
+- Add the label with: `gh pr edit <number> --add-label "version:patch"`
+- The deploy job will fail if the merged PR has no version label.
 
 ### QA Notes
 
@@ -360,9 +341,8 @@ Tests are located in `/test` directory mirroring the `lib/` structure.
 
 - `/lib/src/core/widgets/` - Reusable UI components
 - `/lib/src/core/routing/` - All route definitions
-- `/lib/src/core/packages/` - Package integrations (PocketBase, storage)
+- `/lib/src/core/packages/` - Package integrations (Supabase, storage)
 - `/assets/` - Static assets and icons
-- `/server/` - Backend server configurations
 
 ## Documentation
 
@@ -391,64 +371,6 @@ Example update for Recent Updates table:
 
 ## Testing
  check docs/testing.md for the testing account
-
-## PocketBase API Access
-
-**IMPORTANT:** When any PocketBase schema or data change is needed (creating collections, modifying fields, seeding data, etc.), **always use the PocketBase API directly** — never modify the database through migrations alone without verifying via the API first.
-
-### Test Superuser Credentials
-
-Credentials are stored in `.env` (gitignored — never commit this file):
-
-```
-PB_PROD_EMAIL=...
-PB_PROD_PASSWORD=...
-PB_STAGING_EMAIL=...
-PB_STAGING_PASSWORD=...
-```
-
-### Authenticating
-
-```bash
-# Load credentials from .env and authenticate
-source .env
-curl -X POST http://127.0.0.1:8091/api/admins/auth-with-password \
-  -H "Content-Type: application/json" \
-  -d "{\"identity\":\"$PB_PROD_EMAIL\",\"password\":\"$PB_PROD_PASSWORD\"}"
-```
-
-Use the returned `token` as a Bearer token for subsequent requests:
-
-```bash
-curl -H "Authorization: Bearer <token>" http://127.0.0.1:8091/api/collections
-```
-
-### Guidelines
-
-- **Always use the test superuser** from `.env` for API interactions during development
-- **Prefer the PocketBase API** over direct DB manipulation for schema changes, collection management, and data seeding
-- **Do not add new `server/pb_migrations/*.js` files for routine schema work** — apply collection changes with the Admin API (dashboard or scripted), consistent with the rest of this project’s workflow.
-- `.env` is gitignored — keep credentials out of source control
-
-### Soft delete (PocketBase)
-
-For **new base collections** (and when extending existing ones via the API):
-
-1. Add a non-required bool field **`isDeleted`** (camelCase; default effectively false for existing rows).
-2. Set **`deleteRule`** to the literal rule **`false`** so API clients cannot hard-delete records (superusers can still remove rows from the dashboard if needed).
-3. Extend **`listRule`** and **`viewRule`** so soft-deleted rows are invisible to clients, e.g. append **`&& isDeleted != true`** to whatever access rule you already use. Leave **`listRule` / `viewRule` null or empty** only when the collection is intentionally admin-only with no API rule.
-4. **Soft delete in the app** is implemented by **`PATCH` / `update` with `{ "isDeleted": true }`**, not `DELETE`.
-5. **Views** that read underlying tables should filter out deleted rows in SQL, e.g. **`AND COALESCE(isDeleted, false) = false`**.
-
-**Apply finance collections + account-totals view** (dry run, then apply):
-
-```bash
-dart run tool/pb_apply_soft_delete.dart --env-file .env
-dart run tool/pb_apply_soft_delete.dart --env-file .env --yes
-```
-
-Optional: `--url`, `--email`, `--password` override env defaults (see script header in `tool/pb_apply_soft_delete.dart`).
-
 
 ## grepai - Semantic Code Search
 

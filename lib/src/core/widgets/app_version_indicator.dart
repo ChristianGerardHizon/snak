@@ -2,14 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../packages/app_info/app_info_provider.dart';
-import '../packages/pocketbase/pocketbase_provider.dart';
+import '../packages/supabase/supabase_provider.dart';
 
 /// Reusable widget displaying server domain, app version, and environment.
-///
-/// Shows:
-/// - Server domain: `staging.snak.hznsystems.com`
-/// - Version and build number: `v1.0.0+1`
-/// - Environment badge (only for non-prod): `DEV` or `STAGING`
 class AppVersionIndicator extends ConsumerWidget {
   const AppVersionIndicator({super.key});
 
@@ -18,15 +13,13 @@ class AppVersionIndicator extends ConsumerWidget {
     final theme = Theme.of(context);
     final appInfoAsync = ref.watch(appInfoProvider);
     final env = currentEnvironment;
-    final serverUrl = pocketbaseUrl;
+    final serverUrl = supabaseUrl;
 
-    // Extract domain from URL (remove protocol)
     final domain = Uri.parse(serverUrl).host;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Server domain
         Text(
           domain,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -35,13 +28,10 @@ class AppVersionIndicator extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 4),
-
-        // Version and environment badge
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Version info
             appInfoAsync.when(
               data: (info) => Text(
                 'v${info.version}+${info.buildNumber}',
@@ -57,8 +47,6 @@ class AppVersionIndicator extends ConsumerWidget {
               ),
               error: (_, __) => const SizedBox.shrink(),
             ),
-
-            // Environment badge (only for non-prod)
             if (env != 'prod') ...[
               const SizedBox(width: 8),
               Container(

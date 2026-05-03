@@ -2,9 +2,18 @@ import 'dart:math' show Random;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
+import '../routing/router.dart';
+import '../../features/health/data/health_records_repository.dart';
+import '../../features/health/data/health_reports_repository.dart';
+import '../../features/health/models/health_record.dart';
+import '../../features/health/models/health_report.dart';
+import '../../features/students/data/students_repository.dart';
+import '../../features/students/models/student.dart';
+import '../widgets/form_feedback.dart';
 import 'information_confirmation_page.dart';
 import 'measurement_instruction_page.dart';
 import 'checking_result_page.dart';
@@ -17,16 +26,18 @@ import '../widgets/common/snak_sprite_sheet.dart';
 ///
 /// Matches reference layout: logo, mascot + headline left, form grid right,
 /// primary action directly under the allergies field.
-class ProfileSetupPage extends StatefulWidget {
+class ProfileSetupPage extends ConsumerStatefulWidget {
   const ProfileSetupPage({
     super.key,
     required this.onComplete,
     required this.onBack,
+    required this.onReturnToStart,
     this.measurementResultOutcome = MeasurementResultOutcome.normal,
   });
 
   final VoidCallback onComplete;
   final VoidCallback onBack;
+  final VoidCallback onReturnToStart;
 
   /// Fallback if no random draw is stored. For now the flow picks a random
   /// [MeasurementResultOutcome] (underweight / normal / overweight) when
@@ -40,10 +51,10 @@ class ProfileSetupPage extends StatefulWidget {
   static const actionPink = Color(0xFFE85BB5);
 
   @override
-  State<ProfileSetupPage> createState() => _ProfileSetupPageState();
+  ConsumerState<ProfileSetupPage> createState() => _ProfileSetupPageState();
 }
 
-class _ProfileSetupPageState extends State<ProfileSetupPage> {
+class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   final _studentIdController = TextEditingController();
   final _ageController = TextEditingController();
   final _sectionController = TextEditingController();
@@ -57,6 +68,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   bool _showCheckingResult = false;
   bool _showMeasurementResult = false;
   MeasurementResultOutcome? _rolledMeasurementOutcome;
+  String? _rolledReportId;
+  bool _persisting = false;
 
   @override
   void dispose() {
@@ -95,7 +108,138 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       _showCheckingResult = false;
       _showMeasurementResult = false;
       _rolledMeasurementOutcome = null;
+      _rolledReportId = null;
+      _persisting = false;
     });
+  }
+
+  StudentSex? _mapSex(_ProfileSex? s) => switch (s) {
+        _ProfileSex.boy => StudentSex.male,
+        _ProfileSex.girl => StudentSex.female,
+        null => null,
+      };
+
+  /// Generate fake "machine reading" vitals matching the rolled outcome's spec.
+  ({double heightCm, double weightKg, double tempC, int hr, String bp})
+      _fakeVitals(MeasurementResultOutcome outcome) {
+    final r = Random();
+    final (baseHeight, baseWeight) = switch (outcome) {
+      MeasurementResultOutcome.underweight => (120, 18),
+      MeasurementResultOutcome.normal => (130, 28),
+      MeasurementResultOutcome.overweight => (135, 40),
+    };
+    final heightCm = baseHeight + r.nextDouble() * 4 - 2;
+    final weightKg = baseWeight + r.nextDouble() * 4 - 2;
+    final tempC = 36.4 + r.nextDouble() * 0.8;
+    final hr = 78 + r.nextInt(20);
+    final systolic = 100 + r.nextInt(20);
+    final diastolic = 65 + r.nextInt(15);
+    return (
+      heightCm: double.parse(heightCm.toStringAsFixed(1)),
+      weightKg: double.parse(weightKg.toStringAsFixed(1)),
+      tempC: double.parse(tempC.toStringAsFixed(1)),
+      hr: hr,
+      bp: '$systolic/$diastolic',
+    );
+  }
+
+  Future<void> _persistAndAdvance() async {
+    debugPrint('[ProfileSetup] CONFIRM tapped (persisting=$_persisting)');
+    if (_persisting) return;
+    setState(() => _persisting = true);
+
+    // Roll the outcome now so the persisted vitals match what's displayed.
+    final outcome = MeasurementResultOutcome
+        .values[Random().nextInt(MeasurementResultOutcome.values.length)];
+    final v = _fakeVitals(outcome);
+
+    try {
+      final ageText = _ageController.text.trim();
+      final age = int.tryParse(ageText);
+      // Approximate DOB from age (Jan 1 of birth year) — schema needs `date`.
+      final dob = age == null
+          ? null
+          : DateTime(DateTime.now().year - age, 1, 1);
+
+      final studentId = _studentIdController.text.trim();
+      final allergies = _allergiesController.text.trim();
+
+      final draft = Student(
+        id: '',
+        firstName: studentId.isEmpty ? 'Student' : studentId,
+        lastName: '',
+        dateOfBirth: dob,
+        sex: _mapSex(_sex),
+        gradeLevel: _selectedGrade,
+        section: _sectionController.text.trim().isEmpty
+            ? null
+            : _sectionController.text.trim(),
+        studentNumber: studentId.isEmpty ? null : studentId,
+        notes: allergies.isEmpty ? null : 'Allergies: $allergies',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final repo = ref.read(studentsRepositoryProvider);
+      Student? saved;
+      if (studentId.isNotEmpty) {
+        saved = await repo.getByStudentNumber(studentId);
+        if (saved != null) {
+          debugPrint('[ProfileSetup] reusing existing student id=${saved.id}');
+        }
+      }
+      if (saved == null) {
+        debugPrint('[ProfileSetup] inserting student...');
+        saved = await repo.create(draft);
+        debugPrint('[ProfileSetup] student inserted id=${saved.id}');
+      }
+      final studentDbId = saved.id;
+
+      await ref.read(healthRecordsRepositoryProvider).create(
+            HealthRecord(
+              id: '',
+              studentId: studentDbId,
+              heightCm: v.heightCm,
+              weightKg: v.weightKg,
+              allergies: allergies.isEmpty ? null : allergies,
+              recordedAt: DateTime.now(),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
+
+      final savedReport = await ref.read(healthReportsRepositoryProvider).create(
+            HealthReport(
+              id: '',
+              studentId: studentDbId,
+              visitDate: DateTime.now(),
+              vitalsTempC: v.tempC,
+              vitalsBp: v.bp,
+              vitalsHr: v.hr,
+              diagnosis: outcome.name,
+              reportedBy: 'snak-machine',
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
+
+      debugPrint('[ProfileSetup] all writes ok, advancing');
+      if (!mounted) return;
+      setState(() {
+        _rolledMeasurementOutcome = outcome;
+        _rolledReportId = savedReport.id;
+        _persisting = false;
+        _showConfirmation = false;
+        _showMeasurementInstruction = true;
+      });
+    } catch (e, st) {
+      debugPrint('[ProfileSetup] persist failed: $e\n$st');
+      if (!mounted) return;
+      setState(() => _persisting = false);
+      rootScaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(content: Text('Failed to save: $e')),
+      );
+    }
   }
 
   @override
@@ -103,7 +247,11 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     if (_showMeasurementResult) {
       return MeasurementResultPage(
         outcome: _rolledMeasurementOutcome ?? widget.measurementResultOutcome,
-        onDone: _restartForNextStudent,
+        reportId: _rolledReportId,
+        onDone: () {
+          _restartForNextStudent();
+          widget.onReturnToStart();
+        },
       );
     }
 
@@ -111,8 +259,6 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       return CheckingResultPage(
         onComplete: () => setState(() {
           _showCheckingResult = false;
-          _rolledMeasurementOutcome = MeasurementResultOutcome
-              .values[Random().nextInt(MeasurementResultOutcome.values.length)];
           _showMeasurementResult = true;
         }),
       );
@@ -144,10 +290,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         grade: _selectedGrade ?? '',
         section: _sectionController.text.trim(),
         allergies: _allergiesDisplay(),
-        onConfirm: () => setState(() {
-          _showConfirmation = false;
-          _showMeasurementInstruction = true;
-        }),
+        onConfirm: _persisting ? () {} : _persistAndAdvance,
         onBack: () => setState(() => _showConfirmation = false),
       );
     }
@@ -235,19 +378,29 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                         final availableW = constraints.maxWidth;
                         final availableH = constraints.maxHeight;
                         // Cap mascot height so Row + form fits typical viewports; scroll handles the rest.
-                        final spriteH =
-                            (availableH * 0.38).clamp(140.0, 340.0).toDouble();
+                        final wideLayout = availableW >= 720;
+                        final spriteH = (availableH * (wideLayout ? 0.42 : 0.34))
+                            .clamp(160.0, 360.0)
+                            .toDouble();
                         final cellAspect = SnakSpriteSheet.cellWidth /
                             SnakSpriteSheet.cellHeight;
                         final spriteW = spriteH * cellAspect;
-                        final formW =
-                            (availableW * 0.55).clamp(340.0, 700.0).toDouble();
-                        final wideLayout = availableW >= 760;
+                        final scrollHorizontalPadding = edgePad * 2.8;
+                        final rowGap = edgePad * 1.0;
+                        final remainingForForm = availableW -
+                            scrollHorizontalPadding -
+                            spriteW -
+                            rowGap;
+                        final formW = wideLayout
+                            ? remainingForForm.clamp(420.0, 1400.0).toDouble()
+                            : (availableW * 0.55).clamp(340.0, 760.0).toDouble();
 
                         final actionGap =
                             (size.width * 0.03).clamp(16.0, 28.0).toDouble();
-                        final form = SizedBox(
-                          width: wideLayout ? formW : null,
+                        final form = ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: wideLayout ? formW : double.infinity,
+                          ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -272,8 +425,31 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                                   labelColor: ProfileSetupPage.actionPink,
                                   width: buttonWidth,
                                   height: buttonHeight,
-                                  onPressed: () =>
-                                      setState(() => _showConfirmation = true),
+                                  onPressed: () {
+                                    final missing = <String>[
+                                      if (_studentIdController.text
+                                          .trim()
+                                          .isEmpty)
+                                        'Student ID',
+                                      if (_ageController.text.trim().isEmpty)
+                                        'Age',
+                                      if (_sex == null) 'Sex',
+                                      if (_selectedGrade == null) 'Grade',
+                                      if (_sectionController.text
+                                          .trim()
+                                          .isEmpty)
+                                        'Section',
+                                    ];
+                                    if (missing.isNotEmpty) {
+                                      showErrorSnackBar(
+                                        context,
+                                        message:
+                                            'Please fill in: ${missing.join(', ')}',
+                                      );
+                                      return;
+                                    }
+                                    setState(() => _showConfirmation = true);
+                                  },
                                 ),
                               ),
                             ],
@@ -309,11 +485,14 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                           child: wideLayout
                               ? Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    mascotCol,
+                                    SizedBox(
+                                      width: spriteW,
+                                      child: mascotCol,
+                                    ),
                                     SizedBox(width: edgePad * 1.0),
-                                    form,
+                                    Expanded(child: form),
                                   ],
                                 )
                               : Column(
@@ -366,8 +545,8 @@ class _ProfileForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    final labelFontSize = (w * 0.044).clamp(17.0, 24.0);
-    final inputFontSize = (w * 0.052).clamp(20.0, 30.0);
+    final labelFontSize = (w * 0.044).clamp(17.0, 27.0);
+    final inputFontSize = (w * 0.052).clamp(20.0, 34.0);
     final fieldPadH = (w * 0.05).clamp(20.0, 32.0);
     final fieldPadV = (w * 0.04).clamp(18.0, 28.0);
     final rowGap = (w * 0.036).clamp(14.0, 22.0);
@@ -395,10 +574,12 @@ class _ProfileForm extends StatelessWidget {
     InputDecoration deco({String? hint}) {
       return InputDecoration(
         hintText: hint,
+        hintMaxLines: 1,
         hintStyle: TextStyle(
           color: Colors.white.withValues(alpha: 0.5),
           fontWeight: FontWeight.w600,
           fontSize: inputFontSize * 0.92,
+          overflow: TextOverflow.ellipsis,
         ),
         isDense: false,
         contentPadding: EdgeInsets.only(
@@ -442,50 +623,61 @@ class _ProfileForm extends StatelessWidget {
           ),
         ),
         SizedBox(height: rowGap),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 4,
-              child: _LabeledField(
-                color: fieldColor,
-                label: 'AGE:',
-                labelStyle: labelStyle,
-                fieldInsets: fieldInsets,
-                minInputRowHeight: minInputRow,
-                field: TextField(
-                  controller: ageController,
-                  style: inputStyle,
-                  cursorColor: Colors.white,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(2),
-                  ],
-                  decoration: deco(),
-                ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final ageField = _LabeledField(
+              color: fieldColor,
+              label: 'AGE:',
+              labelStyle: labelStyle,
+              fieldInsets: fieldInsets,
+              minInputRowHeight: minInputRow,
+              field: TextField(
+                controller: ageController,
+                style: inputStyle,
+                cursorColor: Colors.white,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(2),
+                ],
+                decoration: deco(),
               ),
-            ),
-            SizedBox(width: rowGap),
-            Expanded(
-              flex: 6,
-              child: _SexField(
-                color: fieldColor,
-                labelStyle: labelStyle,
-                fieldInsets: fieldInsets,
-                minInputRowHeight: minInputRow,
-                sexCircleSize: sexCircle,
-                sex: sex,
-                onSexChanged: onSexChanged,
-              ),
-            ),
-          ],
+            );
+            final sexField = _SexField(
+              color: fieldColor,
+              labelStyle: labelStyle,
+              fieldInsets: fieldInsets,
+              minInputRowHeight: minInputRow,
+              sexCircleSize: sexCircle,
+              sex: sex,
+              onSexChanged: onSexChanged,
+            );
+            if (constraints.maxWidth < 460) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ageField,
+                  SizedBox(height: rowGap),
+                  sexField,
+                ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 4, child: ageField),
+                SizedBox(width: rowGap),
+                Expanded(flex: 6, child: sexField),
+              ],
+            );
+          },
         ),
         SizedBox(height: rowGap),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
+              flex: 5,
               child: _LabeledField(
                 color: fieldColor,
                 label: 'GRADE:',
@@ -502,7 +694,8 @@ class _ProfileForm extends StatelessWidget {
                       isDense: true,
                       style: inputStyle,
                       iconEnabledColor: Colors.white,
-                      iconDisabledColor: Colors.white.withValues(alpha: 0.5),
+                      iconDisabledColor:
+                          Colors.white.withValues(alpha: 0.5),
                       dropdownColor: fieldColor,
                       items: [
                         for (var g = 1; g <= 6; g++)
@@ -523,6 +716,7 @@ class _ProfileForm extends StatelessWidget {
             ),
             SizedBox(width: rowGap),
             Expanded(
+              flex: 6,
               child: _LabeledField(
                 color: fieldColor,
                 label: 'SECTION:',
@@ -638,28 +832,62 @@ class _SexField extends StatelessWidget {
       required Color fillColor,
     }) {
       final selected = sex == value;
-      return SizedBox(
-        width: sexCircleSize,
-        height: sexCircleSize,
-        child: Material(
-          color: fillColor.withValues(alpha: selected ? 0.95 : 0.82),
-          shape: CircleBorder(
-            side: BorderSide(
-              color: Colors.white,
-              width: selected ? 3.5 : 2.5,
-            ),
+      final hasSelection = sex != null;
+      final dimmed = hasSelection && !selected;
+
+      return AnimatedScale(
+        scale: selected ? 1.12 : 1.0,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutBack,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          width: sexCircleSize,
+          height: sexCircleSize,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: fillColor.withValues(alpha: 0.55),
+                      blurRadius: 18,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 4),
+                    ),
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      blurRadius: 10,
+                      spreadRadius: -2,
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
-          clipBehavior: Clip.antiAlias,
-          elevation: 2,
-          shadowColor: Colors.black.withValues(alpha: 0.15),
-          child: InkWell(
-            onTap: () => onSexChanged(selected ? null : value),
-            customBorder: const CircleBorder(),
-            child: Center(
-              child: Icon(
-                icon,
+          child: Material(
+            color: fillColor.withValues(
+              alpha: selected ? 1.0 : (dimmed ? 0.55 : 0.85),
+            ),
+            shape: CircleBorder(
+              side: BorderSide(
                 color: Colors.white,
-                size: iconSize,
+                width: selected ? 4.0 : 2.5,
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => onSexChanged(selected ? null : value),
+              customBorder: const CircleBorder(),
+              child: Center(
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: iconSize,
+                ),
               ),
             ),
           ),
@@ -684,23 +912,28 @@ class _SexField extends StatelessWidget {
         padding: fieldInsets,
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: minInputRowHeight),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text('SEX:', style: labelStyle),
-              SizedBox(width: (labelStyle.fontSize ?? 16) * 0.45),
-              genderCircle(
-                value: _ProfileSex.boy,
-                icon: Icons.male,
-                fillColor: const Color(0xFF3B7DD8),
-              ),
-              SizedBox(width: sexCircleSize * 0.2),
-              genderCircle(
-                value: _ProfileSex.girl,
-                icon: Icons.female,
-                fillColor: const Color(0xFFE85BB5),
-              ),
-            ],
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text('SEX:', style: labelStyle),
+                SizedBox(width: (labelStyle.fontSize ?? 16) * 0.45),
+                genderCircle(
+                  value: _ProfileSex.boy,
+                  icon: Icons.male,
+                  fillColor: const Color(0xFF3B7DD8),
+                ),
+                SizedBox(width: sexCircleSize * 0.2),
+                genderCircle(
+                  value: _ProfileSex.girl,
+                  icon: Icons.female,
+                  fillColor: const Color(0xFFE85BB5),
+                ),
+              ],
+            ),
           ),
         ),
       ),
