@@ -5,7 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:theme_provider/theme_provider.dart';
 
 import 'core/i18n/strings.g.dart';
-import 'core/packages/pocketbase/pocketbase_provider.dart';
+import 'core/packages/supabase/supabase_provider.dart';
 import 'core/packages/theme/app_themes.dart';
 import 'core/pages/app_initialization_page.dart';
 import 'core/routing/router.dart';

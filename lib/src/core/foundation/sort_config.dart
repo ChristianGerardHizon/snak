@@ -11,8 +11,7 @@ class SortConfig {
   /// Whether to sort in descending order (newest/highest first).
   final bool descending;
 
-  /// Converts to PocketBase sort string format.
-  /// Returns `-field` for descending, `field` for ascending.
+  /// Converts to a sort string. Returns `-field` for descending, `field` for ascending.
   String toSortString() => descending ? '-$field' : field;
 
   /// Creates a copy with optional field overrides.
