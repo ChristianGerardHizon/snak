@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/snak_pill_button.dart';
-import '../widgets/common/snak_sprite_sheet.dart';
+import '../widgets/common/mascot.dart';
 
 /// Read-only review of student profile before finishing onboarding.
 ///
@@ -13,21 +13,21 @@ class InformationConfirmationPage extends StatelessWidget {
   const InformationConfirmationPage({
     super.key,
     required this.studentId,
+    required this.name,
     required this.age,
     required this.sex,
     required this.grade,
     required this.section,
-    required this.allergies,
     required this.onConfirm,
     required this.onBack,
   });
 
   final String studentId;
+  final String name;
   final String age;
   final String sex;
   final String grade;
   final String section;
-  final String allergies;
 
   final VoidCallback onConfirm;
   final VoidCallback onBack;
@@ -38,39 +38,10 @@ class InformationConfirmationPage extends StatelessWidget {
   /// Matches [ProfileSetupPage.actionPink].
   static const pillPink = Color(0xFFE85BB5);
 
+  static const _headlineRed = Color(0xFFE53935);
+
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    final edgePad = size.width * 0.04;
-    final logoWidth = (size.width * 0.22).clamp(120.0, 240.0);
-    final logoHeight = logoWidth / SnakLogoRaster.aspect;
-
-    final buttonWidth = (size.width * 0.34).clamp(240.0, 440.0);
-    final buttonHeight = (buttonWidth / 3.85).clamp(58.0, 100.0);
-    final buttonGap = (size.width * 0.055).clamp(22.0, 48.0);
-
-    final headlineStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: (size.width * 0.052).clamp(30.0, 46.0),
-          height: 1.12,
-          shadows: [
-            Shadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ) ??
-        TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: (size.width * 0.052).clamp(30.0, 46.0),
-          height: 1.12,
-        );
-
-    final bottomPad = edgePad * 2 + MediaQuery.viewInsetsOf(context).bottom;
-
     return Scaffold(
       body: Material(
         type: MaterialType.transparency,
@@ -86,129 +57,54 @@ class InformationConfirmationPage extends StatelessWidget {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final maxW = constraints.maxWidth;
-                  final panelMaxW = (maxW * 0.96).clamp(400.0, 920.0);
-                  final labelSize = (maxW * 0.05).clamp(19.0, 28.0);
-                  final valueSize = (maxW * 0.055).clamp(21.0, 32.0);
-                  final mascotH =
-                      (constraints.maxHeight * 0.32).clamp(180.0, 300.0);
-                  final cellAspect = SnakSpriteSheet.sheet2CellWidth /
-                      SnakSpriteSheet.sheet2CellHeight;
-                  final mascotW = mascotH * cellAspect;
+                  final maxH = constraints.maxHeight;
 
-                  final labelStyle = TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: labelSize,
-                    height: 1.2,
-                  );
-                  final valueStyle = TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: valueSize,
-                    height: 1.2,
-                  );
+                  final cardW =
+                      (maxW * 0.94).clamp(360.0, 1100.0).toDouble();
+                  final cardH =
+                      (maxH * 0.86).clamp(420.0, 720.0).toDouble();
 
-                  final allowScroll = maxW < 600;
-                  final padding = EdgeInsets.fromLTRB(
-                    edgePad * 1.0,
-                    edgePad * 0.6,
-                    edgePad * 1.0,
-                    bottomPad,
-                  );
-                  final content = Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisAlignment: allowScroll
-                          ? MainAxisAlignment.start
-                          : MainAxisAlignment.center,
-                      mainAxisSize:
-                          allowScroll ? MainAxisSize.min : MainAxisSize.max,
+                  final logoW = (maxW * 0.12).clamp(72.0, 160.0).toDouble();
+                  final logoH = logoW / SnakLogoRaster.aspect;
+
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: maxW * 0.03,
+                      vertical: maxH * 0.02,
+                    ),
+                    child: Column(
                       children: [
+                        Expanded(
+                          child: Center(
+                            child: _ConfirmationCard(
+                              cardWidth: cardW,
+                              cardHeight: cardH,
+                              headlineColor: _headlineRed,
+                              labelColor: panelBlue,
+                              valueColor: const Color(0xFF1F2937),
+                              pillColor: pillPink,
+                              studentId: studentId,
+                              name: name,
+                              age: age,
+                              sex: sex,
+                              grade: grade,
+                              section: section,
+                              onConfirm: onConfirm,
+                              onBack: onBack,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: maxH * 0.01),
                         SizedBox(
-                          width: logoWidth,
-                          height: logoHeight,
+                          width: logoW,
+                          height: logoH,
                           child: Assets.images.snakLogo.image(
                             fit: BoxFit.contain,
-                            alignment: Alignment.centerLeft,
                             filterQuality: FilterQuality.high,
                           ),
                         ),
-                        SizedBox(height: edgePad * 0.85),
-                        Text(
-                          'IS THIS CORRECT?',
-                          textAlign: TextAlign.center,
-                          style: headlineStyle,
-                        ),
-                        SizedBox(height: edgePad * 1.75),
-                        Center(
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: panelMaxW),
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              alignment: Alignment.center,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: mascotH * 0.38,
-                                    right: mascotW * 0.18,
-                                  ),
-                                  child: _StudentInfoPanel(
-                                    color: panelBlue,
-                                    labelStyle: labelStyle,
-                                    valueStyle: valueStyle,
-                                    studentId: studentId,
-                                    age: age,
-                                    sex: sex,
-                                    grade: grade,
-                                    section: section,
-                                    allergies: allergies,
-                                  ),
-                                ),
-                                Positioned(
-                                  right: -mascotW * 0.06,
-                                  bottom: 0,
-                                  child: SnakSpriteSheet.sittingForward(
-                                    width: mascotW,
-                                    height: mascotH,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: edgePad * 2.75),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SnakPillButton(
-                              label: 'CONFIRM',
-                              labelColor: pillPink,
-                              width: buttonWidth,
-                              height: buttonHeight,
-                              onPressed: onConfirm,
-                            ),
-                            SizedBox(width: buttonGap),
-                            SnakPillButton(
-                              label: 'BACK',
-                              labelColor: pillPink,
-                              width: buttonWidth,
-                              height: buttonHeight,
-                              onPressed: onBack,
-                            ),
-                          ],
-                        ),
                       ],
-                    );
-
-                  if (allowScroll) {
-                    return SingleChildScrollView(
-                      padding: padding,
-                      clipBehavior: Clip.none,
-                      child: content,
-                    );
-                  }
-                  return Padding(
-                    padding: padding,
-                    child: content,
+                    ),
                   );
                 },
               ),
@@ -220,201 +116,200 @@ class InformationConfirmationPage extends StatelessWidget {
   }
 }
 
-class _StudentInfoPanel extends StatelessWidget {
-  const _StudentInfoPanel({
-    required this.color,
-    required this.labelStyle,
-    required this.valueStyle,
+class _ConfirmationCard extends StatelessWidget {
+  const _ConfirmationCard({
+    required this.cardWidth,
+    required this.cardHeight,
+    required this.headlineColor,
+    required this.labelColor,
+    required this.valueColor,
+    required this.pillColor,
     required this.studentId,
+    required this.name,
     required this.age,
     required this.sex,
     required this.grade,
     required this.section,
-    required this.allergies,
+    required this.onConfirm,
+    required this.onBack,
   });
 
-  final Color color;
-  final TextStyle labelStyle;
-  final TextStyle valueStyle;
+  final double cardWidth;
+  final double cardHeight;
+  final Color headlineColor;
+  final Color labelColor;
+  final Color valueColor;
+  final Color pillColor;
   final String studentId;
+  final String name;
   final String age;
   final String sex;
   final String grade;
   final String section;
-  final String allergies;
+  final VoidCallback onConfirm;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    final gap = (labelStyle.fontSize ?? 16) * 0.65;
-    final rowGap = gap * 0.85;
+    final mascotH = cardHeight * 0.62;
+    final mascotW = mascotH * Mascot.aspect;
+    final mascotColumnW = mascotW.clamp(0.0, cardWidth * 0.34);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white, width: 3.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          gap * 1.65,
-          gap * 1.35,
-          gap * 1.65,
-          gap * 1.55,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'STUDENT INFORMATION',
-              textAlign: TextAlign.center,
-              style: labelStyle.copyWith(
-                fontSize: (labelStyle.fontSize ?? 16) * 1.14,
-                letterSpacing: 1.35,
+    final pillH = (cardHeight * 0.11).clamp(48.0, 72.0).toDouble();
+    final confirmW =
+        (cardWidth * 0.38).clamp(220.0, 420.0).toDouble();
+    final backW = (cardWidth * 0.18).clamp(120.0, 220.0).toDouble();
+
+    final headlineSize = (cardWidth * 0.04).clamp(22.0, 40.0).toDouble();
+    final labelSize = (cardWidth * 0.022).clamp(14.0, 24.0).toDouble();
+    final valueSize = (cardWidth * 0.028).clamp(16.0, 30.0).toDouble();
+
+    final labelStyle = TextStyle(
+      color: labelColor,
+      fontWeight: FontWeight.w900,
+      fontSize: labelSize,
+      letterSpacing: 0.4,
+      height: 1.1,
+    );
+    final valueStyle = TextStyle(
+      color: valueColor,
+      fontWeight: FontWeight.w800,
+      fontSize: valueSize,
+      height: 1.15,
+    );
+
+    return SizedBox(
+      width: cardWidth,
+      height: cardHeight,
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.78),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: gap * 1.35),
-            LayoutBuilder(
-              builder: (context, c) {
-                final wide = c.maxWidth >= 560;
-                if (wide) {
-                  return Column(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 5,
-                            child: _InfoLine(
-                              label: 'STUDENT ID:',
-                              value: studentId,
-                              labelStyle: labelStyle,
-                              valueStyle: valueStyle,
-                            ),
-                          ),
-                          SizedBox(width: rowGap),
-                          Expanded(
-                            flex: 2,
-                            child: _InfoLine(
-                              label: 'AGE:',
-                              value: age,
-                              labelStyle: labelStyle,
-                              valueStyle: valueStyle,
-                            ),
-                          ),
-                          SizedBox(width: rowGap),
-                          Expanded(
-                            flex: 2,
-                            child: _InfoLine(
-                              label: 'SEX:',
-                              value: sex,
-                              labelStyle: labelStyle,
-                              valueStyle: valueStyle,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: rowGap),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _InfoLine(
-                              label: 'GRADE:',
-                              value: grade,
-                              labelStyle: labelStyle,
-                              valueStyle: valueStyle,
-                            ),
-                          ),
-                          SizedBox(width: rowGap),
-                          Expanded(
-                            flex: 2,
-                            child: _InfoLine(
-                              label: 'SECTION:',
-                              value: section,
-                              labelStyle: labelStyle,
-                              valueStyle: valueStyle,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _InfoLine(
-                      label: 'STUDENT ID:',
-                      value: studentId,
-                      labelStyle: labelStyle,
-                      valueStyle: valueStyle,
-                    ),
-                    SizedBox(height: rowGap),
-                    Row(
+          ),
+          Positioned(
+            left: cardWidth * 0.04,
+            top: cardHeight * 0.05,
+            right: mascotColumnW + cardWidth * 0.06,
+            bottom: pillH + cardHeight * 0.1,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'IS THIS CORRECT?',
+                  style: TextStyle(
+                    color: headlineColor,
+                    fontSize: headlineSize,
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                SizedBox(height: cardHeight * 0.04),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: _InfoLine(
-                            label: 'AGE:',
-                            value: age,
-                            labelStyle: labelStyle,
-                            valueStyle: valueStyle,
-                          ),
+                        _InfoLine(
+                          label: 'ID NO.:',
+                          value: studentId,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
                         ),
-                        SizedBox(width: rowGap),
-                        Expanded(
-                          child: _InfoLine(
-                            label: 'SEX:',
-                            value: sex,
-                            labelStyle: labelStyle,
-                            valueStyle: valueStyle,
-                          ),
+                        SizedBox(height: cardHeight * 0.025),
+                        _InfoLine(
+                          label: 'NAME:',
+                          value: name,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
+                        ),
+                        SizedBox(height: cardHeight * 0.025),
+                        _InfoLine(
+                          label: 'AGE:',
+                          value: age,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
+                        ),
+                        SizedBox(height: cardHeight * 0.025),
+                        _InfoLine(
+                          label: 'SEX:',
+                          value: sex,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
+                        ),
+                        SizedBox(height: cardHeight * 0.025),
+                        _InfoLine(
+                          label: 'GRADE:',
+                          value: grade,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
+                        ),
+                        SizedBox(height: cardHeight * 0.025),
+                        _InfoLine(
+                          label: 'SECTION:',
+                          value: section,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
                         ),
                       ],
                     ),
-                    SizedBox(height: rowGap),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _InfoLine(
-                            label: 'GRADE:',
-                            value: grade,
-                            labelStyle: labelStyle,
-                            valueStyle: valueStyle,
-                          ),
-                        ),
-                        SizedBox(width: rowGap),
-                        Expanded(
-                          child: _InfoLine(
-                            label: 'SECTION:',
-                            value: section,
-                            labelStyle: labelStyle,
-                            valueStyle: valueStyle,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: rowGap),
-            _InfoLine(
-              label: 'ALLERGIES:',
-              value: allergies,
-              labelStyle: labelStyle,
-              valueStyle: valueStyle,
+          ),
+          Positioned(
+            right: cardWidth * 0.02,
+            bottom: cardHeight * 0.06,
+            width: mascotColumnW,
+            height: mascotH,
+            child: FittedBox(
+              fit: BoxFit.contain,
+              alignment: Alignment.bottomRight,
+              child: Mascot.sitting(width: mascotW, height: mascotH),
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            left: cardWidth * 0.04,
+            bottom: cardHeight * 0.05,
+            child: Row(
+              children: [
+                SnakPillButton(
+                  label: 'CONFIRM',
+                  labelColor: pillColor,
+                  width: confirmW,
+                  height: pillH,
+                  onPressed: onConfirm,
+                ),
+                SizedBox(width: cardWidth * 0.02),
+                SnakPillButton(
+                  label: 'BACK',
+                  labelColor: pillColor,
+                  width: backW,
+                  height: pillH,
+                  onPressed: onBack,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

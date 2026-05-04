@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../features/health/data/health_records_repository.dart';
 import '../../features/health/data/health_reports_repository.dart';
-import '../../features/health/models/health_report.dart';
+import '../../features/students/data/students_repository.dart';
+import '../../features/students/models/student.dart';
 import 'measurement_result_page.dart';
 
 /// Renders the health-findings report for a given report id.
@@ -34,14 +36,52 @@ class ReportViewerPage extends ConsumerWidget {
             onClose: () => Navigator.of(context).pop(),
           );
         }
+        final studentAsync = ref.watch(studentByIdProvider(report.studentId));
+        final recordAsync =
+            ref.watch(latestHealthRecordProvider(report.studentId));
+        final student = studentAsync.value;
+        final record = recordAsync.value;
+        final heightM = record?.heightCm == null
+            ? null
+            : record!.heightCm! / 100.0;
+        final weightKg = record?.weightKg;
+        final bmi = (heightM != null && weightKg != null && heightM > 0)
+            ? weightKg / (heightM * heightM)
+            : null;
         return MeasurementResultPage(
           outcome: _outcomeFrom(report.diagnosis),
           reportId: report.id,
+          studentName: student?.fullName,
+          schoolId: student?.studentNumber,
+          age: _ageFromDob(student?.dateOfBirth),
+          sex: _sexLabel(student?.sex),
+          heightMeters: heightM,
+          weightKg: weightKg,
+          bmi: bmi,
+          visitDate: report.visitDate,
           onDone: () => Navigator.of(context).pop(),
         );
       },
     );
   }
+
+  static int? _ageFromDob(DateTime? dob) {
+    if (dob == null) return null;
+    final now = DateTime.now();
+    var age = now.year - dob.year;
+    if (now.month < dob.month ||
+        (now.month == dob.month && now.day < dob.day)) {
+      age -= 1;
+    }
+    return age < 0 ? null : age;
+  }
+
+  static String? _sexLabel(StudentSex? sex) => switch (sex) {
+        StudentSex.male => 'Male',
+        StudentSex.female => 'Female',
+        StudentSex.other => 'Other',
+        null => null,
+      };
 
   static MeasurementResultOutcome _outcomeFrom(String? diagnosis) {
     return MeasurementResultOutcome.values.firstWhere(

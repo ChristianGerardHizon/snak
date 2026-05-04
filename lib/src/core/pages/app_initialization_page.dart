@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'health_monitoring_consent_page.dart';
+import 'health_monitoring_join_page.dart';
 import 'measurement_result_page.dart';
 import 'profile_setup_page.dart';
 import 'splash_page.dart';
@@ -11,10 +12,13 @@ class AppInitializationPage extends StatelessWidget {
     super.key,
     required this.canContinue,
     required this.showConsent,
+    required this.showJoin,
     required this.showProfileSetup,
     required this.onSplashContinue,
     required this.onConsentContinue,
     required this.onConsentBack,
+    required this.onJoinAccept,
+    required this.onJoinDecline,
     required this.onProfileComplete,
     required this.onProfileBack,
     required this.onReturnToStart,
@@ -23,10 +27,13 @@ class AppInitializationPage extends StatelessWidget {
 
   final bool canContinue;
   final bool showConsent;
+  final bool showJoin;
   final bool showProfileSetup;
   final VoidCallback onSplashContinue;
   final VoidCallback onConsentContinue;
   final VoidCallback onConsentBack;
+  final VoidCallback onJoinAccept;
+  final VoidCallback onJoinDecline;
   final VoidCallback onProfileComplete;
   final VoidCallback onProfileBack;
   final VoidCallback onReturnToStart;
@@ -42,6 +49,12 @@ class AppInitializationPage extends StatelessWidget {
         onBack: onProfileBack,
         onReturnToStart: onReturnToStart,
         measurementResultOutcome: measurementResultOutcome,
+      );
+    }
+    if (showJoin) {
+      return HealthMonitoringJoinPage(
+        onJoin: onJoinAccept,
+        onDecline: onJoinDecline,
       );
     }
     if (showConsent) {

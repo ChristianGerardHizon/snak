@@ -27,6 +27,7 @@ class Application extends HookConsumerWidget {
 
     final continueAfterLanding = useState(false);
     final showHealthConsent = useState(false);
+    final showHealthJoin = useState(false);
     final showProfileSetup = useState(false);
 
     final showSplash = isInitializing || !continueAfterLanding.value;
@@ -70,26 +71,37 @@ class Application extends HookConsumerWidget {
                       home: AppInitializationPage(
                         canContinue: !isInitializing,
                         showConsent: showHealthConsent.value,
+                        showJoin: showHealthJoin.value,
                         showProfileSetup: showProfileSetup.value,
                         onSplashContinue: () {
                           showHealthConsent.value = true;
                         },
                         onConsentContinue: () {
                           showHealthConsent.value = false;
-                          showProfileSetup.value = true;
+                          showHealthJoin.value = true;
                         },
                         onConsentBack: () {
                           showHealthConsent.value = false;
+                        },
+                        onJoinAccept: () {
+                          showHealthJoin.value = false;
+                          showProfileSetup.value = true;
+                        },
+                        onJoinDecline: () {
+                          showHealthJoin.value = false;
+                          showHealthConsent.value = false;
+                          continueAfterLanding.value = false;
                         },
                         onProfileComplete: () {
                           continueAfterLanding.value = true;
                         },
                         onProfileBack: () {
                           showProfileSetup.value = false;
-                          showHealthConsent.value = true;
+                          showHealthJoin.value = true;
                         },
                         onReturnToStart: () {
                           showProfileSetup.value = false;
+                          showHealthJoin.value = false;
                           showHealthConsent.value = false;
                           continueAfterLanding.value = false;
                         },
