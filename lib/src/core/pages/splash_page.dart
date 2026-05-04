@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../assets/assets.gen.dart';
+import '../constants/constants.dart';
 import 'report_viewer_page.dart';
 
 class SplashPage extends HookWidget {
@@ -15,19 +16,27 @@ class SplashPage extends HookWidget {
   final bool canContinue;
   final VoidCallback onContinue;
 
-  static const _startPink = Color(0xFFFF007F);
-  static const _startButtonWidthFractionOfLogo = 0.45;
-  static const _startButtonAspectRatio = 4.25;
+  static const _startRed = Color(0xFFE53935);
+  static const _startButtonWidthFractionOfLogo = 0.55;
+  static const _startButtonAspectRatio = 3.6;
+  static const _maxLogoWidth = 1200.0;
+  static const _maxButtonContentWidth = 700.0;
+  static const _maxContentHeight = 900.0;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    const logoScale = 0.62;
+    final contentWidth =
+        size.width < _maxLogoWidth ? size.width : _maxLogoWidth;
+    final horizontalPadding = contentWidth * 0.02;
+    final logoWidth = contentWidth - horizontalPadding * 2;
+    final buttonContentWidth = logoWidth < _maxButtonContentWidth
+        ? logoWidth
+        : _maxButtonContentWidth;
     final logoBox = Size(
-      size.width * 0.94 * logoScale,
-      size.height * 0.52 * logoScale,
+      logoWidth,
+      logoWidth / SnakLogoRaster.aspect,
     );
-    final horizontalPadding = size.width * 0.06;
 
     final entranceController = useAnimationController(
       duration: const Duration(milliseconds: 1100),
@@ -78,29 +87,64 @@ class SplashPage extends HookWidget {
               child: SizedBox.expand(),
             ),
             SafeArea(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                child: Column(
-                  children: [
-                    SizedBox(height: size.height * 0.08),
-                    _AnimatedLogo(
-                      animation: logoAnim,
-                      size: logoBox,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: _maxLogoWidth,
+                    maxHeight: _maxContentHeight,
+                  ),
+                  child: Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: horizontalPadding),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final buttonWidth =
+                            buttonContentWidth * _startButtonWidthFractionOfLogo;
+                        final buttonHeight =
+                            buttonWidth / _startButtonAspectRatio;
+                        final topGap = size.height * 0.08;
+                        final midGap = size.height * 0.04;
+                        final bottomGap = size.height * 0.04;
+                        // Reserve space for fixed elements; whatever's left goes to the logo.
+                        final reserved = topGap +
+                            midGap +
+                            bottomGap +
+                            buttonHeight +
+                            _ReportLookupActions.estimatedHeight;
+                        final maxLogoHeight = (constraints.maxHeight - reserved)
+                            .clamp(0.0, logoBox.height);
+                        final logoHeight = maxLogoHeight < logoBox.height
+                            ? maxLogoHeight
+                            : logoBox.height;
+                        final logoSize = Size(
+                          logoHeight * SnakLogoRaster.aspect,
+                          logoHeight,
+                        );
+                        return Column(
+                          children: [
+                            SizedBox(height: topGap),
+                            _AnimatedLogo(
+                              animation: logoAnim,
+                              size: logoSize,
+                            ),
+                            const Spacer(),
+                            _AnimatedStartButton(
+                              animation: buttonAnim,
+                              pulse: pulse,
+                              width: buttonWidth,
+                              aspectRatio: _startButtonAspectRatio,
+                              enabled: canContinue,
+                              onPressed: onContinue,
+                              labelColor: _startRed,
+                            ),
+                            SizedBox(height: midGap),
+                            const _ReportLookupActions(),
+                            SizedBox(height: bottomGap),
+                          ],
+                        );
+                      },
                     ),
-                    const Spacer(),
-                    _AnimatedStartButton(
-                      animation: buttonAnim,
-                      pulse: pulse,
-                      width: logoBox.width * _startButtonWidthFractionOfLogo,
-                      aspectRatio: _startButtonAspectRatio,
-                      enabled: canContinue,
-                      onPressed: onContinue,
-                      labelColor: _startPink,
-                    ),
-                    SizedBox(height: size.height * 0.04),
-                    const _ReportLookupActions(),
-                    SizedBox(height: size.height * 0.04),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -134,21 +178,10 @@ class _AnimatedLogo extends StatelessWidget {
       child: SizedBox(
         width: size.width,
         height: size.height,
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x33000000),
-                blurRadius: 24,
-                offset: Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Assets.images.snakLogo.image(
-            fit: BoxFit.contain,
-            alignment: Alignment.center,
-            filterQuality: FilterQuality.high,
-          ),
+        child: Assets.images.snakLogo.image(
+          fit: BoxFit.contain,
+          alignment: Alignment.center,
+          filterQuality: FilterQuality.high,
         ),
       ),
     );
@@ -245,15 +278,15 @@ class _StartPill extends StatelessWidget {
           customBorder: pillShape,
           child: Ink(
             decoration: BoxDecoration(
-              color: enabled ? labelColor : labelColor.withValues(alpha: 0.55),
+              color:
+                  enabled ? Colors.white : Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(cornerRadius),
-              border: Border.all(color: Colors.white, width: 2.5),
               boxShadow: enabled
                   ? [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.22),
-                        blurRadius: 12,
-                        offset: const Offset(0, 5),
+                        color: Colors.black.withValues(alpha: 0.28),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
                       ),
                     ]
                   : null,
@@ -266,15 +299,15 @@ class _StartPill extends StatelessWidget {
                         'START',
                         key: const ValueKey('label'),
                         style: theme.textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
+                              color: labelColor,
+                              fontWeight: FontWeight.w900,
                               letterSpacing: letterSpacing,
                               fontSize: fontSize,
                               height: 1.0,
                             ) ??
                             TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
+                              color: labelColor,
+                              fontWeight: FontWeight.w900,
                               letterSpacing: letterSpacing,
                               fontSize: fontSize,
                               height: 1.0,
@@ -284,10 +317,9 @@ class _StartPill extends StatelessWidget {
                         key: const ValueKey('spinner'),
                         width: spinnerSize,
                         height: spinnerSize,
-                        child: const CircularProgressIndicator(
+                        child: CircularProgressIndicator(
                           strokeWidth: 2.6,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(labelColor),
                         ),
                       ),
               ),
@@ -324,6 +356,8 @@ void _openReport(BuildContext context, String reportId) {
 
 class _ReportLookupActions extends StatelessWidget {
   const _ReportLookupActions();
+
+  static const double estimatedHeight = 40;
 
   Future<void> _enterCode(BuildContext context) async {
     final controller = TextEditingController();

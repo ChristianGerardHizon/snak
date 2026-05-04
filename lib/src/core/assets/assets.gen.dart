@@ -95,6 +95,9 @@ class $AssetsImagesGen {
   AssetGenImage get background =>
       const AssetGenImage('assets/images/background.png');
 
+  /// Directory path: assets/images/mascot
+  $AssetsImagesMascotGen get mascot => const $AssetsImagesMascotGen();
+
   /// File path: assets/images/snak_logo.png
   AssetGenImage get snakLogo =>
       const AssetGenImage('assets/images/snak_logo.png');
@@ -110,6 +113,49 @@ class $AssetsImagesGen {
   /// List of all assets
   List<AssetGenImage> get values =>
       [background, snakLogo, spritesSheet, spritesSheet2];
+}
+
+class $AssetsImagesMascotGen {
+  const $AssetsImagesMascotGen();
+
+  /// File path: assets/images/mascot/mascot_bitten.png
+  AssetGenImage get mascotBitten =>
+      const AssetGenImage('assets/images/mascot/mascot_bitten.png');
+
+  /// File path: assets/images/mascot/mascot_shy.png
+  AssetGenImage get mascotShy =>
+      const AssetGenImage('assets/images/mascot/mascot_shy.png');
+
+  /// File path: assets/images/mascot/mascot_sitting.png
+  AssetGenImage get mascotSitting =>
+      const AssetGenImage('assets/images/mascot/mascot_sitting.png');
+
+  /// File path: assets/images/mascot/mascot_sleeping.png
+  AssetGenImage get mascotSleeping =>
+      const AssetGenImage('assets/images/mascot/mascot_sleeping.png');
+
+  /// File path: assets/images/mascot/mascot_thumbs_up.png
+  AssetGenImage get mascotThumbsUp =>
+      const AssetGenImage('assets/images/mascot/mascot_thumbs_up.png');
+
+  /// File path: assets/images/mascot/mascot_walking.png
+  AssetGenImage get mascotWalking =>
+      const AssetGenImage('assets/images/mascot/mascot_walking.png');
+
+  /// File path: assets/images/mascot/mascot_winking.png
+  AssetGenImage get mascotWinking =>
+      const AssetGenImage('assets/images/mascot/mascot_winking.png');
+
+  /// List of all assets
+  List<AssetGenImage> get values => [
+        mascotBitten,
+        mascotShy,
+        mascotSitting,
+        mascotSleeping,
+        mascotThumbsUp,
+        mascotWalking,
+        mascotWinking
+      ];
 }
 
 class Assets {

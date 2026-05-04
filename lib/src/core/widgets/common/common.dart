@@ -6,5 +6,5 @@
 /// ```
 library;
 
-export 'snak_sprite_sheet.dart';
+export 'mascot.dart';
 export 'status_badge.dart';

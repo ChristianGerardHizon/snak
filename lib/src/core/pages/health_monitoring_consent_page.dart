@@ -2,17 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
-import '../widgets/common/snak_pill_button.dart';
-import '../widgets/common/snak_sprite_sheet.dart';
+import '../widgets/common/mascot.dart';
 
 /// School health-monitoring consent step.
 ///
-/// Layout matches the reference design:
-/// - SNAK logo anchored to the top-left corner.
-/// - Large apple sprite on the left, royal-blue consent panel on the right
-///   (panel sized to wrap the message across ~4 lines).
-/// - Two pink pill buttons at the bottom: CONTINUE (left) and BACK (right),
-///   centered as a pair rather than stretched to the screen edges.
+/// Translucent white card on the left with a red title and a blue body that
+/// highlights "height" and "weight" in pink. The apple mascot stands on the
+/// right, partially overlapping the card. A pink NEXT pill sits in the
+/// bottom-right of the card and the SNAK logo is centered at the bottom.
 class HealthMonitoringConsentPage extends StatelessWidget {
   const HealthMonitoringConsentPage({
     super.key,
@@ -23,26 +20,13 @@ class HealthMonitoringConsentPage extends StatelessWidget {
   final VoidCallback onContinue;
   final VoidCallback onBack;
 
-  /// Vibrant pink for pill buttons (matches design reference).
-  static const _pillPink = Color(0xFFE619B0);
-
-  /// Royal blue consent panel.
-  static const _panelBlue = Color(0xFF2575FC);
-
-  static const _consentMessage =
-      'I agree that my information will be used by the school for health monitoring.';
+  static const _titleRed = Color(0xFFE53935);
+  static const _bodyBlue = Color(0xFF2575FC);
+  static const _highlightPink = Color(0xFFE619B0);
+  static const _nextPink = Color(0xFFE619B0);
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    final edgePad = size.width * 0.04;
-    final logoWidth = (size.width * 0.16).clamp(96.0, 180.0);
-    final logoHeight = logoWidth / SnakLogoRaster.aspect;
-
-    final buttonWidth = (size.width * 0.26).clamp(180.0, 320.0);
-    final buttonHeight = (buttonWidth / 4.2).clamp(48.0, 78.0);
-    final buttonGap = size.width * 0.18;
-
     return Scaffold(
       body: Material(
         type: MaterialType.transparency,
@@ -55,151 +39,56 @@ class HealthMonitoringConsentPage extends StatelessWidget {
               filterQuality: FilterQuality.medium,
             ),
             SafeArea(
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: edgePad * 0.4,
-                    left: edgePad * 0.6,
-                    child: SizedBox(
-                      width: logoWidth,
-                      height: logoHeight,
-                      child: Assets.images.snakLogo.image(
-                        fit: BoxFit.contain,
-                        alignment: Alignment.centerLeft,
-                        filterQuality: FilterQuality.high,
-                      ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxW = constraints.maxWidth;
+                  final maxH = constraints.maxHeight;
+
+                  final cardW = (maxW * 0.94).clamp(360.0, 1200.0).toDouble();
+                  final cardH = (cardW * 0.55).clamp(240.0, 520.0).toDouble();
+
+                  final mascotH = (cardH * 0.78).toDouble();
+                  final mascotW = mascotH * Mascot.aspect;
+
+                  // Logo at bottom center.
+                  final logoW = (maxW * 0.12).clamp(72.0, 160.0).toDouble();
+                  final logoH = logoW / SnakLogoRaster.aspect;
+
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: maxW * 0.03,
+                      vertical: maxH * 0.03,
                     ),
-                  ),
-                  Positioned.fill(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final availableW = constraints.maxWidth;
-                        final availableH = constraints.maxHeight;
-                        final hPad = edgePad * 1.2;
-                        final innerW = availableW - hPad * 2;
-                        final cellAspect = SnakSpriteSheet.cellWidth /
-                            SnakSpriteSheet.cellHeight;
-
-                        // Reserve space for the bottom buttons + logo.
-                        final reservedTop = logoHeight + edgePad * 1.2;
-                        final reservedBottom =
-                            buttonHeight + size.height * 0.04 + edgePad * 1.2;
-                        final usableH =
-                            (availableH - reservedTop - reservedBottom)
-                                .clamp(260.0, double.infinity);
-
-                        // Phones: stack sprite above panel.
-                        final stack = availableW < 600;
-
-                        if (stack) {
-                          var spriteH = (usableH * 0.46)
-                              .clamp(160.0, 280.0)
-                              .toDouble();
-                          var spriteW = spriteH * cellAspect;
-                          if (spriteW > innerW) {
-                            spriteW = innerW;
-                            spriteH = spriteW / cellAspect;
-                          }
-                          final panelW =
-                              innerW.clamp(240.0, 520.0).toDouble();
-
-                          return Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              hPad,
-                              reservedTop,
-                              hPad,
-                              reservedBottom,
-                            ),
-                            child: Center(
-                              child: SingleChildScrollView(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SnakSpriteSheet.happy(
-                                      width: spriteW,
-                                      height: spriteH,
-                                    ),
-                                    SizedBox(height: edgePad * 0.8),
-                                    SizedBox(
-                                      width: panelW,
-                                      child: _ConsentPanel(
-                                        color: _panelBlue,
-                                        message: _consentMessage,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-
-                        // Tablets/desktop: sprite + panel side-by-side.
-                        final gap = edgePad * 0.6;
-                        var spriteH =
-                            (availableH * 0.55).clamp(220.0, 460.0).toDouble();
-                        var spriteW = spriteH * cellAspect;
-                        final maxSpriteW = (innerW - gap) * 0.5;
-                        if (spriteW > maxSpriteW) {
-                          spriteW = maxSpriteW;
-                          spriteH = spriteW / cellAspect;
-                        }
-                        final panelW = (innerW - gap - spriteW)
-                            .clamp(220.0, 520.0)
-                            .toDouble();
-
-                        return Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: hPad),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                SnakSpriteSheet.happy(
-                                  width: spriteW,
-                                  height: spriteH,
-                                ),
-                                SizedBox(width: gap),
-                                SizedBox(
-                                  width: panelW,
-                                  child: _ConsentPanel(
-                                    color: _panelBlue,
-                                    message: _consentMessage,
-                                  ),
-                                ),
-                              ],
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Center(
+                            child: _CardWithMascot(
+                              cardWidth: cardW,
+                              cardHeight: cardH,
+                              mascotWidth: mascotW,
+                              mascotHeight: mascotH,
+                              titleColor: _titleRed,
+                              bodyColor: _bodyBlue,
+                              highlightColor: _highlightPink,
+                              nextColor: _nextPink,
+                              onNext: onContinue,
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: size.height * 0.04,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SnakPillButton(
-                          label: 'CONTINUE',
-                          labelColor: _pillPink,
-                          width: buttonWidth,
-                          height: buttonHeight,
-                          onPressed: onContinue,
                         ),
-                        SizedBox(width: buttonGap),
-                        SnakPillButton(
-                          label: 'BACK',
-                          labelColor: _pillPink,
-                          width: buttonWidth,
-                          height: buttonHeight,
-                          onPressed: onBack,
+                        SizedBox(height: maxH * 0.01),
+                        SizedBox(
+                          width: logoW,
+                          height: logoH,
+                          child: Assets.images.snakLogo.image(
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.high,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ],
@@ -209,46 +98,236 @@ class HealthMonitoringConsentPage extends StatelessWidget {
   }
 }
 
-class _ConsentPanel extends StatelessWidget {
-  const _ConsentPanel({
-    required this.color,
-    required this.message,
+class _CardWithMascot extends StatelessWidget {
+  const _CardWithMascot({
+    required this.cardWidth,
+    required this.cardHeight,
+    required this.mascotWidth,
+    required this.mascotHeight,
+    required this.titleColor,
+    required this.bodyColor,
+    required this.highlightColor,
+    required this.nextColor,
+    required this.onNext,
   });
 
-  final Color color;
-  final String message;
+  final double cardWidth;
+  final double cardHeight;
+  final double mascotWidth;
+  final double mascotHeight;
+  final Color titleColor;
+  final Color bodyColor;
+  final Color highlightColor;
+  final Color nextColor;
+  final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final baseSize = theme.textTheme.headlineSmall?.fontSize ?? 24;
-    final textStyle =
-        (theme.textTheme.headlineSmall ?? const TextStyle()).copyWith(
-      color: Colors.white,
-      fontWeight: FontWeight.w800,
-      height: 1.28,
-      fontSize: baseSize.clamp(20.0, 28.0),
-    );
+    final btnW = (cardWidth * 0.18).clamp(120.0, 200.0).toDouble();
+    final btnH = (btnW / 3.2).clamp(42.0, 70.0).toDouble();
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
+    // Reserve a column on the right of the card for the mascot. The card
+    // text is inset by this amount so it never runs under the mascot.
+    final mascotColumnW = mascotWidth.clamp(0.0, cardWidth * 0.42);
+
+    return SizedBox(
+      width: cardWidth,
+      height: cardHeight,
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          Positioned.fill(
+            child: _ConsentCard(
+              titleColor: titleColor,
+              bodyColor: bodyColor,
+              highlightColor: highlightColor,
+              rightInset: mascotColumnW + cardWidth * 0.02,
+            ),
+          ),
+          Positioned(
+            right: cardWidth * 0.02,
+            top: 0,
+            bottom: btnH + cardHeight * 0.06,
+            child: FittedBox(
+              fit: BoxFit.contain,
+              child: Mascot.shy(width: mascotWidth, height: mascotHeight),
+            ),
+          ),
+          Positioned(
+            right: cardWidth * 0.04,
+            bottom: cardHeight * 0.06,
+            child: _NextPill(
+              width: btnW,
+              height: btnH,
+              color: nextColor,
+              onPressed: onNext,
+            ),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: textStyle,
+    );
+  }
+}
+
+class _ConsentCard extends StatelessWidget {
+  const _ConsentCard({
+    required this.titleColor,
+    required this.bodyColor,
+    required this.highlightColor,
+    required this.rightInset,
+  });
+
+  final Color titleColor;
+  final Color bodyColor;
+  final Color highlightColor;
+  final double rightInset;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, c) {
+        final w = c.maxWidth;
+        final h = c.maxHeight;
+
+        final titleSize = (w * 0.045).clamp(22.0, 40.0).toDouble();
+        final bodySize = (w * 0.038).clamp(18.0, 32.0).toDouble();
+        final padH = (w * 0.045).clamp(18.0, 40.0).toDouble();
+        final padV = (h * 0.07).clamp(18.0, 40.0).toDouble();
+
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.78),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.9),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              padH,
+              padV,
+              padH + rightInset,
+              padV,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Hello Healthy Human!',
+                  style: TextStyle(
+                    color: titleColor,
+                    fontSize: titleSize,
+                    fontWeight: FontWeight.w900,
+                    height: 1.1,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                SizedBox(height: padV * 0.45),
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      color: bodyColor,
+                      fontSize: bodySize,
+                      fontWeight: FontWeight.w800,
+                      height: 1.28,
+                    ),
+                    children: [
+                      const TextSpan(text: 'We will measure your '),
+                      TextSpan(
+                        text: 'height',
+                        style: TextStyle(color: highlightColor),
+                      ),
+                      const TextSpan(text: ' and '),
+                      TextSpan(
+                        text: 'weight',
+                        style: TextStyle(color: highlightColor),
+                      ),
+                      const TextSpan(
+                        text:
+                            ' to check your health. This will only take a few minutes.\n',
+                      ),
+                      const TextSpan(
+                        text:
+                            'Your information will only be used by the school for health monitoring and will be kept private.',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _NextPill extends StatelessWidget {
+  const _NextPill({
+    required this.width,
+    required this.height,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final double width;
+  final double height;
+  final Color color;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final cornerRadius = height * 0.5;
+    final fontSize = (height * 0.42).clamp(16.0, 28.0).toDouble();
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(cornerRadius),
+    );
+
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Material(
+        color: Colors.transparent,
+        shape: shape,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: shape,
+          child: Ink(
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(cornerRadius),
+              border: Border.all(color: const Color(0xFFFFE45C), width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.22),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                'NEXT',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: fontSize * 0.1,
+                  height: 1.0,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
