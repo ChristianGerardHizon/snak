@@ -129,7 +129,7 @@ class _ResultCard extends StatelessWidget {
 
   final double width;
   final double height;
-  final _HealthSpec spec;
+  final HealthOutcomeSpec spec;
   final String stamp;
   final String? studentName;
   final String? schoolId;
@@ -293,7 +293,7 @@ class _BmiBanner extends StatelessWidget {
     required this.headerSize,
   });
 
-  final _HealthSpec spec;
+  final HealthOutcomeSpec spec;
   final double bmi;
   final double headerSize;
 
@@ -635,8 +635,12 @@ class _DottedLinePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _HealthSpec {
-  const _HealthSpec({
+/// Public accessor for the health spec, used by the PDF export to mirror the
+/// in-app report card layout.
+HealthOutcomeSpec healthOutcomeSpec(MeasurementResultOutcome o) => _spec(o);
+
+class HealthOutcomeSpec {
+  const HealthOutcomeSpec({
     required this.fallbackHeightM,
     required this.fallbackWeightKg,
     required this.fallbackBmi,
@@ -670,9 +674,9 @@ class _HealthSpec {
   final bool smiling;
 }
 
-_HealthSpec _spec(MeasurementResultOutcome o) {
+HealthOutcomeSpec _spec(MeasurementResultOutcome o) {
   return switch (o) {
-    MeasurementResultOutcome.underweight => const _HealthSpec(
+    MeasurementResultOutcome.underweight => const HealthOutcomeSpec(
         fallbackHeightM: 1.20,
         fallbackWeightKg: 18,
         fallbackBmi: 12.5,
@@ -698,7 +702,7 @@ _HealthSpec _spec(MeasurementResultOutcome o) {
         faceColor: Color(0xFFE6B800),
         smiling: false,
       ),
-    MeasurementResultOutcome.normal => const _HealthSpec(
+    MeasurementResultOutcome.normal => const HealthOutcomeSpec(
         fallbackHeightM: 1.35,
         fallbackWeightKg: 30,
         fallbackBmi: 16.5,
@@ -723,7 +727,7 @@ _HealthSpec _spec(MeasurementResultOutcome o) {
         faceColor: Color(0xFF22C55E),
         smiling: true,
       ),
-    MeasurementResultOutcome.overweight => const _HealthSpec(
+    MeasurementResultOutcome.overweight => const HealthOutcomeSpec(
         fallbackHeightM: 1.28,
         fallbackWeightKg: 32,
         fallbackBmi: 19.5,

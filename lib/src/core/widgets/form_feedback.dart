@@ -99,7 +99,12 @@ void showSuccessSnackBar(
         children: [
           const Icon(Icons.check_circle, color: Colors.white),
           const SizedBox(width: 8),
-          Expanded(child: Text(message)),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
         ],
       ),
       behavior: SnackBarBehavior.floating,
@@ -136,7 +141,12 @@ void showErrorSnackBar(
         children: [
           const Icon(Icons.error_outline, color: Colors.white),
           const SizedBox(width: 8),
-          Expanded(child: Text(message)),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
         ],
       ),
       behavior: SnackBarBehavior.floating,
@@ -172,7 +182,12 @@ void showInfoSnackBar(
         children: [
           const Icon(Icons.info_outline, color: Colors.white),
           const SizedBox(width: 8),
-          Expanded(child: Text(message)),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
         ],
       ),
       behavior: SnackBarBehavior.floating,
@@ -208,7 +223,12 @@ void showWarningSnackBar(
         children: [
           const Icon(Icons.warning_amber, color: Colors.white),
           const SizedBox(width: 8),
-          Expanded(child: Text(message)),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
         ],
       ),
       behavior: SnackBarBehavior.floating,
