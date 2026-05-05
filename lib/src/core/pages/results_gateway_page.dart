@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
@@ -12,10 +13,17 @@ import '../widgets/common/mascot.dart';
 import '../widgets/common/snak_pill_button.dart';
 import 'measurement_result_page.dart';
 
-const String _reportBaseUrl = String.fromEnvironment(
-  'SNAK_REPORT_BASE_URL',
-  defaultValue: 'https://christiangerardhizon.github.io/snak/#/reports',
-);
+const String _reportBaseUrlOverride =
+    String.fromEnvironment('SNAK_REPORT_BASE_URL');
+
+const String _prodReportBaseUrl =
+    'https://christiangerardhizon.github.io/snak/#/reports';
+const String _localReportBaseUrl = 'http://localhost:8000/#/reports';
+
+String get _reportBaseUrl {
+  if (_reportBaseUrlOverride.isNotEmpty) return _reportBaseUrlOverride;
+  return kReleaseMode ? _prodReportBaseUrl : _localReportBaseUrl;
+}
 
 String _reportUrl(String reportId) => '$_reportBaseUrl/$reportId';
 

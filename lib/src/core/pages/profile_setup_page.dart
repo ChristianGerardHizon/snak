@@ -1,7 +1,6 @@
 import 'dart:math' show Random;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../assets/assets.gen.dart';
@@ -124,15 +123,52 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
         null => null,
       };
 
-  /// Map a manually-entered height/weight to a BMI category.
-  /// Cutoffs use a child-friendly approximation rather than strict adult
-  /// WHO bands so the demo presets land where a presenter expects.
-  MeasurementResultOutcome _outcomeFromBmi(double heightCm, double weightKg) {
+  /// WHO BMI-for-age cutoffs (5–19 years), ages 6–12.
+  /// Source: WHO Growth reference data for 5-19 years, BMI-for-age.
+  /// https://www.who.int/tools/growth-reference-data-for-5to19-years/indicators/bmi-for-age
+  ///
+  /// Each entry is (underweight cutoff, overweight cutoff):
+  /// - bmi < underweight  → underweight  (Below -2 SD)
+  /// - bmi > overweight   → overweight   (Above +1 SD)
+  /// - otherwise          → normal
+  static const Map<int, ({double underweight, double overweight})>
+      _boysBmiCutoffs = {
+    6: (underweight: 13.0, overweight: 17.0),
+    7: (underweight: 13.1, overweight: 17.3),
+    8: (underweight: 13.3, overweight: 17.7),
+    9: (underweight: 13.5, overweight: 18.3),
+    10: (underweight: 13.7, overweight: 19.0),
+    11: (underweight: 14.1, overweight: 19.9),
+    12: (underweight: 14.5, overweight: 20.8),
+  };
+
+  static const Map<int, ({double underweight, double overweight})>
+      _girlsBmiCutoffs = {
+    6: (underweight: 12.7, overweight: 16.8),
+    7: (underweight: 12.7, overweight: 17.3),
+    8: (underweight: 12.9, overweight: 18.0),
+    9: (underweight: 13.1, overweight: 18.8),
+    10: (underweight: 13.5, overweight: 19.6),
+    11: (underweight: 13.9, overweight: 20.4),
+    12: (underweight: 14.4, overweight: 21.3),
+  };
+
+  /// Map a manually-entered height/weight to a BMI category using
+  /// age- and sex-specific WHO cutoffs.
+  MeasurementResultOutcome _outcomeFromBmi(
+    double heightCm,
+    double weightKg, {
+    required int age,
+    required _ProfileSex sex,
+  }) {
     final m = heightCm / 100.0;
     if (m <= 0) return MeasurementResultOutcome.normal;
     final bmi = weightKg / (m * m);
-    if (bmi < 14.0) return MeasurementResultOutcome.underweight;
-    if (bmi >= 18.0) return MeasurementResultOutcome.overweight;
+    final table = sex == _ProfileSex.boy ? _boysBmiCutoffs : _girlsBmiCutoffs;
+    final cutoff = table[age];
+    if (cutoff == null) return MeasurementResultOutcome.normal;
+    if (bmi < cutoff.underweight) return MeasurementResultOutcome.underweight;
+    if (bmi > cutoff.overweight) return MeasurementResultOutcome.overweight;
     return MeasurementResultOutcome.normal;
   }
 
@@ -172,8 +208,16 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
     // Otherwise roll a random outcome and let _fakeVitals fill the rest.
     final hasManualVitals =
         overrides.heightCm != null && overrides.weightKg != null;
-    final outcome = hasManualVitals
-        ? _outcomeFromBmi(overrides.heightCm!, overrides.weightKg!)
+    final manualAge = int.tryParse(_ageController.text.trim());
+    final canClassifyByBmi =
+        hasManualVitals && manualAge != null && _sex != null;
+    final outcome = canClassifyByBmi
+        ? _outcomeFromBmi(
+            overrides.heightCm!,
+            overrides.weightKg!,
+            age: manualAge,
+            sex: _sex!,
+          )
         : MeasurementResultOutcome
             .values[Random().nextInt(MeasurementResultOutcome.values.length)];
     final rolled = _fakeVitals(outcome);
@@ -427,6 +471,8 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                               studentIdController: _studentIdController,
                               nameController: _nameController,
                               ageController: _ageController,
+                              onAgeChanged: (v) =>
+                                  setState(() => _ageController.text = v ?? ''),
                               sectionController: _sectionController,
                               selectedGrade: _selectedGrade,
                               onGradeChanged: (v) =>
@@ -492,6 +538,7 @@ class _ProfileCard extends StatelessWidget {
     required this.studentIdController,
     required this.nameController,
     required this.ageController,
+    required this.onAgeChanged,
     required this.sectionController,
     required this.selectedGrade,
     required this.onGradeChanged,
@@ -508,6 +555,7 @@ class _ProfileCard extends StatelessWidget {
   final TextEditingController studentIdController;
   final TextEditingController nameController;
   final TextEditingController ageController;
+  final ValueChanged<String?> onAgeChanged;
   final TextEditingController sectionController;
   final String? selectedGrade;
   final ValueChanged<String?> onGradeChanged;
@@ -591,6 +639,7 @@ class _ProfileCard extends StatelessWidget {
               studentIdController: studentIdController,
               nameController: nameController,
               ageController: ageController,
+              onAgeChanged: onAgeChanged,
               selectedGrade: selectedGrade,
               onGradeChanged: onGradeChanged,
               sectionController: sectionController,
@@ -633,6 +682,7 @@ class _ProfileForm extends StatelessWidget {
     required this.studentIdController,
     required this.nameController,
     required this.ageController,
+    required this.onAgeChanged,
     required this.selectedGrade,
     required this.onGradeChanged,
     required this.sectionController,
@@ -644,6 +694,7 @@ class _ProfileForm extends StatelessWidget {
   final TextEditingController studentIdController;
   final TextEditingController nameController;
   final TextEditingController ageController;
+  final ValueChanged<String?> onAgeChanged;
   final String? selectedGrade;
   final ValueChanged<String?> onGradeChanged;
   final TextEditingController sectionController;
@@ -750,22 +801,41 @@ class _ProfileForm extends StatelessWidget {
         SizedBox(height: rowGap),
         LayoutBuilder(
           builder: (context, constraints) {
+            final ageValue = ageController.text.trim().isEmpty
+                ? null
+                : ageController.text.trim();
             final ageField = _LabeledField(
               color: fieldColor,
               label: 'AGE:',
               labelStyle: labelStyle,
               fieldInsets: fieldInsets,
               minInputRowHeight: minInputRow,
-              field: TextField(
-                controller: ageController,
-                style: inputStyle,
-                cursorColor: Colors.white,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(2),
-                ],
-                decoration: deco(),
+              field: InputDecorator(
+                decoration: deco(hint: 'Select'),
+                isEmpty: ageValue == null,
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: ageValue,
+                    isExpanded: true,
+                    isDense: true,
+                    style: inputStyle,
+                    iconEnabledColor: Colors.white,
+                    iconDisabledColor: Colors.white.withValues(alpha: 0.5),
+                    dropdownColor: fieldColor,
+                    items: [
+                      for (var a = 6; a <= 12; a++)
+                        DropdownMenuItem(
+                          value: '$a',
+                          child: Text(
+                            '$a',
+                            style: inputStyle,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: onAgeChanged,
+                  ),
+                ),
               ),
             );
             final sexField = _SexField(
