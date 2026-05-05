@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'dialog_dismissing_observer.dart';
 import 'router_utils.dart';
@@ -23,7 +22,7 @@ GoRouter router(Ref ref) {
     navigatorKey: rootNavigatorKey,
     initialLocation: HomeRoute.path,
     debugLogDiagnostics: true,
-    observers: [SentryNavigatorObserver(), DialogDismissingObserver()],
+    observers: [DialogDismissingObserver()],
     redirect: RouterUtils.redirect,
     errorBuilder: RouterUtils.errorBuilder,
     routes: [
