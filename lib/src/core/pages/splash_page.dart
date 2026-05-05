@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_hooks/flutter_hooks.dart';
 
 import '../assets/assets.gen.dart';
@@ -38,11 +42,38 @@ class SplashPage extends HookWidget {
       logoWidth / SnakLogoRaster.aspect,
     );
 
+    // Approximate playback time of the intro GIF. The logo and START button
+    // fade in once this elapses so the handoff feels seamless.
+    const gifDuration = Duration(milliseconds: 3000);
+
     final entranceController = useAnimationController(
       duration: const Duration(milliseconds: 1100),
     );
+    final pauseGif = useState(false);
     useEffect(() {
-      entranceController.forward();
+      final timer = Future.delayed(gifDuration, () {
+        if (entranceController.isDismissed) {
+          entranceController.forward();
+        }
+      });
+      void onStatus(AnimationStatus s) {
+        if (s == AnimationStatus.completed) pauseGif.value = true;
+      }
+      entranceController.addStatusListener(onStatus);
+      return () {
+        timer.ignore();
+        entranceController.removeStatusListener(onStatus);
+      };
+    }, const []);
+
+    // Warm the static background used by the screens after splash so the
+    // handoff doesn't flash black while the asset decodes.
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          precacheImage(Assets.images.background.provider(), context);
+        }
+      });
       return null;
     }, const []);
 
@@ -65,10 +96,10 @@ class SplashPage extends HookWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image(
-              image: Assets.images.background.provider(),
+            _PausableGif(
+              assetPath: 'assets/videos/background_video.gif',
+              paused: pauseGif.value,
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.medium,
             ),
             // Soft scrim for legibility behind the logo & button.
             const DecoratedBox(
@@ -459,4 +490,100 @@ class _ReportOverrideDialog extends HookWidget {
         MeasurementResultOutcome.normal => 'Normal',
         MeasurementResultOutcome.overweight => 'Overweight',
       };
+}
+
+/// Plays an animated GIF asset frame-by-frame and freezes on the current
+/// frame when [paused] flips to true.
+class _PausableGif extends StatefulWidget {
+  const _PausableGif({
+    required this.assetPath,
+    required this.paused,
+    this.fit = BoxFit.cover,
+  });
+
+  final String assetPath;
+  final bool paused;
+  final BoxFit fit;
+
+  @override
+  State<_PausableGif> createState() => _PausableGifState();
+}
+
+class _PausableGifState extends State<_PausableGif> {
+  ui.Codec? _codec;
+  ui.Image? _frame;
+  Timer? _timer;
+  bool _disposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final data = await rootBundle.load(widget.assetPath);
+    final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+    if (_disposed) {
+      codec.dispose();
+      return;
+    }
+    _codec = codec;
+    _scheduleNextFrame();
+  }
+
+  Future<void> _scheduleNextFrame() async {
+    final codec = _codec;
+    if (codec == null || _disposed) return;
+    if (widget.paused) return;
+    final frame = await codec.getNextFrame();
+    if (_disposed) {
+      frame.image.dispose();
+      return;
+    }
+    _frame?.dispose();
+    _frame = frame.image;
+    if (mounted) setState(() {});
+    if (widget.paused) return;
+    _timer = Timer(frame.duration, _scheduleNextFrame);
+  }
+
+  @override
+  void didUpdateWidget(covariant _PausableGif oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.paused && widget.paused) {
+      _timer?.cancel();
+      _timer = null;
+    } else if (oldWidget.paused && !widget.paused) {
+      _scheduleNextFrame();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _timer?.cancel();
+    _frame?.dispose();
+    _codec?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final frame = _frame;
+    if (frame == null) {
+      return const SizedBox.expand();
+    }
+    return SizedBox.expand(
+      child: FittedBox(
+        fit: widget.fit,
+        clipBehavior: Clip.hardEdge,
+        child: SizedBox(
+          width: frame.width.toDouble(),
+          height: frame.height.toDouble(),
+          child: RawImage(image: frame, fit: widget.fit),
+        ),
+      ),
+    );
+  }
 }

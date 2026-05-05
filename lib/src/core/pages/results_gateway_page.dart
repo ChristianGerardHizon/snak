@@ -17,7 +17,7 @@ const String _reportBaseUrlOverride =
     String.fromEnvironment('SNAK_REPORT_BASE_URL');
 
 const String _prodReportBaseUrl =
-    'https://christiangerardhizon.github.io/snak/#/reports';
+    'https://snack.hznsystems.com/#/reports';
 const String _localReportBaseUrl = 'http://localhost:8000/#/reports';
 
 String get _reportBaseUrl {
@@ -78,8 +78,11 @@ class ResultsGatewayPage extends StatelessWidget {
                   final maxW = c.maxWidth;
                   final maxH = c.maxHeight;
 
-                  final cardW = (maxW * 0.94).clamp(360.0, 1100.0).toDouble();
-                  final cardH = (maxH * 0.86).clamp(420.0, 720.0).toDouble();
+                  final isPortrait = maxW < maxH * 0.95;
+                  final cardW = (maxW * 0.94).clamp(320.0, 1100.0).toDouble();
+                  final cardH = isPortrait
+                      ? (maxH * 0.92).clamp(560.0, 1100.0).toDouble()
+                      : (maxH * 0.86).clamp(420.0, 720.0).toDouble();
 
                   final logoW = (maxW * 0.12).clamp(72.0, 160.0).toDouble();
                   final logoH = logoW / SnakLogoRaster.aspect;
@@ -172,12 +175,39 @@ class _GatewayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait = cardWidth < cardHeight * 0.85;
+    if (isPortrait) {
+      return _buildPortrait(context);
+    }
+    return _buildLandscape(context);
+  }
+
+  Widget _buildLandscape(BuildContext context) {
     final phoneColW = cardWidth * 0.42;
     final rightColW = cardWidth - phoneColW;
 
-    final qrSide = (rightColW * 0.55).clamp(180.0, 340.0).toDouble();
     final pillH = (cardHeight * 0.11).clamp(48.0, 72.0).toDouble();
     final pillW = (cardWidth * 0.32).clamp(180.0, 280.0).toDouble();
+
+    // Vertical space available for the QR row (between banner + bottom text +
+    // pill). Keep the QR small enough to fit so the "Copy to clipboard" label
+    // below it never gets clipped.
+    final bannerH = cardHeight * 0.16;
+    final clickLinesH = ((cardWidth * 0.022).clamp(14.0, 24.0)) * 1.25 * 2;
+    final qrRowH = cardHeight -
+        cardHeight * 0.05 -
+        bannerH -
+        cardHeight * 0.03 -
+        cardHeight * 0.02 -
+        clickLinesH -
+        pillH -
+        cardHeight * 0.1;
+    // Reserve room for the "Copy to clipboard" label (~size*0.10 incl. gap).
+    final qrSideHeightCap = (qrRowH / 1.18).clamp(140.0, 340.0).toDouble();
+    final qrSideWidthTarget = rightColW * 0.55;
+    final qrSide = qrSideWidthTarget
+        .clamp(140.0, qrSideHeightCap.clamp(140.0, 340.0))
+        .toDouble();
 
     return SizedBox(
       width: cardWidth,
@@ -260,15 +290,6 @@ class _GatewayCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: cardHeight * 0.02),
-                Text(
-                  'Click ',
-                  style: TextStyle(
-                    color: _bodyBlue,
-                    fontSize: (cardWidth * 0.022).clamp(14.0, 24.0),
-                    fontWeight: FontWeight.w900,
-                    height: 1.25,
-                  ),
-                ),
                 _ClickPrintLine(
                   baseColor: _bodyBlue,
                   highlightColor: _printGreen,
@@ -289,6 +310,183 @@ class _GatewayCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPortrait(BuildContext context) {
+    final pad = cardWidth * 0.05;
+    final pillH = 56.0;
+    final qrSide = (cardWidth * 0.55).clamp(200.0, 320.0).toDouble();
+    final bannerH = (cardWidth * 0.18).clamp(72.0, 120.0).toDouble();
+    final bodyFont = (cardWidth * 0.04).clamp(14.0, 20.0).toDouble();
+
+    final onPrint = reportId == null
+        ? null
+        : () => _downloadPdf(
+              reportId: reportId!,
+              outcome: outcome,
+              studentName: studentName,
+              schoolId: schoolId,
+              age: age,
+              sex: sex,
+              heightMeters: heightMeters,
+              weightKg: weightKg,
+              bmi: bmi,
+              visitDate: visitDate,
+            );
+
+    return SizedBox(
+      width: cardWidth,
+      height: cardHeight,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(pad, pad, pad, pad * 0.6),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Center(
+                    child: _ResultsHereBanner(
+                      width: cardWidth - pad * 2,
+                      height: bannerH,
+                    ),
+                  ),
+                  SizedBox(height: pad * 0.8),
+                  _PortraitSummary(spec: spec, width: cardWidth - pad * 2),
+                  SizedBox(height: pad * 0.8),
+                  _CopyableQrCode(size: qrSide, reportId: reportId),
+                  SizedBox(height: pad * 0.6),
+                  Mascot.sitting(
+                    width: qrSide * 0.55,
+                    height: qrSide * 0.55,
+                  ),
+                  SizedBox(height: pad * 0.4),
+                  _ClickPrintLine(
+                    baseColor: _bodyBlue,
+                    highlightColor: _printGreen,
+                    fontSize: bodyFont,
+                  ),
+                  SizedBox(height: pad * 0.8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SnakPillButton(
+                          label: 'PRINT',
+                          labelColor: _printGreen,
+                          width: double.infinity,
+                          height: pillH,
+                          onPressed: onPrint ?? () {},
+                        ),
+                      ),
+                      SizedBox(width: pad * 0.6),
+                      Expanded(
+                        child: SnakPillButton(
+                          label: 'DONE',
+                          labelColor: _doneGreen,
+                          width: double.infinity,
+                          height: pillH,
+                          onPressed: onDone,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: pad * 0.4),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PortraitSummary extends StatelessWidget {
+  const _PortraitSummary({required this.spec, required this.width});
+
+  final _SummarySpec spec;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    final faceSize = (width * 0.22).clamp(72.0, 120.0).toDouble();
+    final titleSize = (width * 0.07).clamp(22.0, 34.0).toDouble();
+    final subSize = (width * 0.04).clamp(14.0, 20.0).toDouble();
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE7C97A), width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: faceSize,
+              height: faceSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: spec.faceColor,
+              ),
+              child: Icon(
+                spec.faceIcon,
+                color: Colors.white,
+                size: faceSize * 0.65,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    spec.title,
+                    style: TextStyle(
+                      color: const Color(0xFF5A3A1F),
+                      fontWeight: FontWeight.w900,
+                      fontSize: titleSize,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    spec.subtitle,
+                    style: TextStyle(
+                      color: const Color(0xFF5A3A1F),
+                      fontWeight: FontWeight.w700,
+                      fontSize: subSize,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -919,7 +1117,7 @@ Future<void> _downloadPdf({
                     children: [
                       infoCell('AGE:', age?.toString() ?? '—'),
                       pw.SizedBox(height: 6),
-                      infoCell('SEX:', sex ?? '—'),
+                      infoCell('GENDER:', sex ?? '—'),
                     ],
                   ),
                 ),
