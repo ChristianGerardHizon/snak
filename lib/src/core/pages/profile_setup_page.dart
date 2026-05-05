@@ -487,7 +487,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                                     'Name',
                                   if (_ageController.text.trim().isEmpty)
                                     'Age',
-                                  if (_sex == null) 'Sex',
+                                  if (_sex == null) 'Gender',
                                   if (_selectedGrade == null) 'Grade',
                                   if (_sectionController.text.trim().isEmpty)
                                     'Section',
@@ -568,14 +568,14 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mascotH = cardHeight * 0.62;
+    final mascotColumnW = cardWidth * 0.42;
+    final mascotH = (cardHeight * 0.78).clamp(0.0, cardHeight - 24).toDouble();
     final mascotW = mascotH * Mascot.aspect;
-    final mascotColumnW = mascotW.clamp(0.0, cardWidth * 0.34);
 
     final pillH = (cardHeight * 0.11).clamp(48.0, 72.0).toDouble();
     final pillW = (cardWidth * 0.5).clamp(280.0, 560.0).toDouble();
 
-    final headlineSize = (cardWidth * 0.034).clamp(20.0, 36.0).toDouble();
+    final headlineSize = (cardWidth * 0.05).clamp(28.0, 56.0).toDouble();
 
     return SizedBox(
       width: cardWidth,
@@ -613,14 +613,21 @@ class _ProfileCard extends StatelessWidget {
                 color: _headlineRed,
                 fontSize: headlineSize,
                 fontWeight: FontWeight.w900,
-                height: 1.05,
-                letterSpacing: 0.3,
+                height: 1.0,
+                letterSpacing: 0.4,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    offset: const Offset(0, 3),
+                    blurRadius: 6,
+                  ),
+                ],
               ),
             ),
           ),
           Positioned(
             right: cardWidth * 0.02,
-            bottom: cardHeight * 0.06,
+            bottom: cardHeight * 0.04,
             width: mascotColumnW,
             height: mascotH,
             child: FittedBox(
@@ -860,9 +867,9 @@ class _ProfileForm extends StatelessWidget {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(flex: 4, child: ageField),
+                Expanded(flex: 6, child: ageField),
                 SizedBox(width: rowGap),
-                Expanded(flex: 6, child: sexField),
+                Expanded(flex: 5, child: sexField),
               ],
             );
           },
@@ -1097,7 +1104,7 @@ class _SexField extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('SEX:', style: labelStyle),
+                Text('GENDER:', style: labelStyle),
                 SizedBox(width: (labelStyle.fontSize ?? 16) * 0.45),
                 genderCircle(
                   value: _ProfileSex.boy,

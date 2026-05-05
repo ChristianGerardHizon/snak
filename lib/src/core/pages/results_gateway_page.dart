@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -245,35 +245,9 @@ class _GatewayCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                        width: qrSide,
-                        height: qrSide,
-                        padding: EdgeInsets.all(qrSide * 0.06),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(qrSide * 0.08),
-                          border: Border.all(
-                            color: const Color(0xFFB8CDEB),
-                            width: 3,
-                          ),
-                        ),
-                        child: reportId == null
-                            ? const Center(
-                                child: Icon(Icons.qr_code_2_rounded,
-                                    size: 100, color: Colors.black26),
-                              )
-                            : QrImageView(
-                                data: _reportUrl(reportId!),
-                                backgroundColor: Colors.white,
-                                eyeStyle: const QrEyeStyle(
-                                  eyeShape: QrEyeShape.square,
-                                  color: Color(0xFF2C4A8C),
-                                ),
-                                dataModuleStyle: const QrDataModuleStyle(
-                                  dataModuleShape: QrDataModuleShape.square,
-                                  color: Color(0xFF2C4A8C),
-                                ),
-                              ),
+                      _CopyableQrCode(
+                        size: qrSide,
+                        reportId: reportId,
                       ),
                       SizedBox(width: rightColW * 0.04),
                       Expanded(
@@ -390,6 +364,108 @@ class _ResultsHereBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CopyableQrCode extends StatefulWidget {
+  const _CopyableQrCode({required this.size, required this.reportId});
+
+  final double size;
+  final String? reportId;
+
+  @override
+  State<_CopyableQrCode> createState() => _CopyableQrCodeState();
+}
+
+class _CopyableQrCodeState extends State<_CopyableQrCode> {
+  bool _justCopied = false;
+
+  Future<void> _copy() async {
+    final id = widget.reportId;
+    if (id == null) return;
+    await Clipboard.setData(ClipboardData(text: _reportUrl(id)));
+    if (!mounted) return;
+    setState(() => _justCopied = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Report link copied to clipboard'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _justCopied = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = widget.size;
+    final reportId = widget.reportId;
+    final enabled = reportId != null;
+
+    final qr = Container(
+      width: size,
+      height: size,
+      padding: EdgeInsets.all(size * 0.06),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(size * 0.08),
+        border: Border.all(
+          color: const Color(0xFFB8CDEB),
+          width: 3,
+        ),
+      ),
+      child: !enabled
+          ? const Center(
+              child: Icon(Icons.qr_code_2_rounded,
+                  size: 100, color: Colors.black26),
+            )
+          : QrImageView(
+              data: _reportUrl(reportId),
+              backgroundColor: Colors.white,
+              eyeStyle: const QrEyeStyle(
+                eyeShape: QrEyeShape.square,
+                color: Color(0xFF2C4A8C),
+              ),
+              dataModuleStyle: const QrDataModuleStyle(
+                dataModuleShape: QrDataModuleShape.square,
+                color: Color(0xFF2C4A8C),
+              ),
+            ),
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        MouseRegion(
+          cursor: enabled
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
+          child: GestureDetector(
+            onTap: enabled ? _copy : null,
+            child: qr,
+          ),
+        ),
+        SizedBox(height: size * 0.04),
+        MouseRegion(
+          cursor: enabled
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
+          child: GestureDetector(
+            onTap: enabled ? _copy : null,
+            child: Text(
+              _justCopied ? 'Copied!' : 'Copy to clipboard',
+              style: TextStyle(
+                color: const Color(0xFF2C4A8C),
+                fontSize: (size * 0.06).clamp(12.0, 18.0),
+                fontWeight: FontWeight.w700,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

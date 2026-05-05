@@ -12,6 +12,14 @@ import 'core/routing/router.dart';
 import 'core/widgets/window_size_listener.dart';
 import 'core/packages/theme/theme_controller.dart';
 
+/// True if the current browser URL deep-links to a routed page (e.g. a
+/// shareable report link), so we should skip the splash/onboarding flow and
+/// mount the router immediately.
+bool _isDeepLink(Uri uri) {
+  final path = uri.fragment.isNotEmpty ? uri.fragment : uri.path;
+  return path.startsWith('/reports/');
+}
+
 /// Main application widget.
 ///
 /// Sets up MaterialApp with GoRouter navigation and localization.
@@ -25,7 +33,7 @@ class Application extends HookConsumerWidget {
     final themeController = ref.read(themeControllerProvider.notifier);
     final isInitializing = themeModeAsync.isLoading;
 
-    final continueAfterLanding = useState(false);
+    final continueAfterLanding = useState(_isDeepLink(Uri.base));
     final showHealthConsent = useState(false);
     final showHealthJoin = useState(false);
     final showProfileSetup = useState(false);
