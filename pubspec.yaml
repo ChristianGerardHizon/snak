@@ -1,5 +1,5 @@
 name: snak
-description: "Snak — Flutter app shell (feature modules removed)."
+description: "Snack — Flutter app shell (feature modules removed)."
 
 publish_to: 'none' 
 
@@ -120,18 +120,18 @@ scripts:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icons/snak_logo.png"
+  image_path: "assets/icons/snak_logo_square.png"
   web:
     generate: true
-    image_path: "assets/icons/snak_logo.png"
+    image_path: "assets/icons/snak_logo_square.png"
   windows:
     generate: true
-    image_path: "assets/icons/snak_logo.png"
+    image_path: "assets/icons/snak_logo_square.png"
   macos:
     generate: true
-    image_path: "assets/icons/snak_logo.png"
+    image_path: "assets/icons/snak_logo_square.png"
   adaptive_icon_background: "#2ECC71"
-  adaptive_icon_foreground: "assets/icons/snak_logo.png"
+  adaptive_icon_foreground: "assets/icons/snak_logo_square.png"
 
 
   

@@ -89,11 +89,11 @@ String get currentEnvironment {
 String get appTitle {
   switch (currentEnvironment) {
     case 'dev':
-      return 'Snak [Dev]';
+      return 'Snack [Dev]';
     case 'staging':
-      return 'Snak [Stg]';
+      return 'Snack [Stg]';
     default:
-      return 'Snak';
+      return 'Snack';
   }
 }
 
