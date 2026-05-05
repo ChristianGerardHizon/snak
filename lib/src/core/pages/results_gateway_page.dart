@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -245,35 +245,44 @@ class _GatewayCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                        width: qrSide,
-                        height: qrSide,
-                        padding: EdgeInsets.all(qrSide * 0.06),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(qrSide * 0.08),
-                          border: Border.all(
-                            color: const Color(0xFFB8CDEB),
-                            width: 3,
-                          ),
-                        ),
-                        child: reportId == null
-                            ? const Center(
-                                child: Icon(Icons.qr_code_2_rounded,
-                                    size: 100, color: Colors.black26),
-                              )
-                            : QrImageView(
-                                data: _reportUrl(reportId!),
-                                backgroundColor: Colors.white,
-                                eyeStyle: const QrEyeStyle(
-                                  eyeShape: QrEyeShape.square,
-                                  color: Color(0xFF2C4A8C),
-                                ),
-                                dataModuleStyle: const QrDataModuleStyle(
-                                  dataModuleShape: QrDataModuleShape.square,
-                                  color: Color(0xFF2C4A8C),
-                                ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: qrSide,
+                            height: qrSide,
+                            padding: EdgeInsets.all(qrSide * 0.06),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(qrSide * 0.08),
+                              border: Border.all(
+                                color: const Color(0xFFB8CDEB),
+                                width: 3,
                               ),
+                            ),
+                            child: reportId == null
+                                ? const Center(
+                                    child: Icon(Icons.qr_code_2_rounded,
+                                        size: 100, color: Colors.black26),
+                                  )
+                                : QrImageView(
+                                    data: _reportUrl(reportId!),
+                                    backgroundColor: Colors.white,
+                                    eyeStyle: const QrEyeStyle(
+                                      eyeShape: QrEyeShape.square,
+                                      color: Color(0xFF2C4A8C),
+                                    ),
+                                    dataModuleStyle: const QrDataModuleStyle(
+                                      dataModuleShape: QrDataModuleShape.square,
+                                      color: Color(0xFF2C4A8C),
+                                    ),
+                                  ),
+                          ),
+                          if (reportId != null) ...[
+                            SizedBox(height: qrSide * 0.06),
+                            _CopyLinkButton(url: _reportUrl(reportId!)),
+                          ],
+                        ],
                       ),
                       SizedBox(width: rightColW * 0.04),
                       Expanded(
@@ -426,6 +435,34 @@ class _ClickPrintLine extends StatelessWidget {
                 ' or scan the QR code to view your\nhealth results and discover more tips!',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CopyLinkButton extends StatelessWidget {
+  const _CopyLinkButton({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: () async {
+        await Clipboard.setData(ClipboardData(text: url));
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Report link copied to clipboard'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
+      icon: const Icon(Icons.copy_rounded, size: 18),
+      label: const Text('Copy link'),
+      style: TextButton.styleFrom(
+        foregroundColor: const Color(0xFF2C4A8C),
+        textStyle: const TextStyle(fontWeight: FontWeight.w800),
       ),
     );
   }
