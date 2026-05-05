@@ -111,7 +111,7 @@ jobs:
       - name: Build Web
         run: |
           flutter build web --release \
-            --base-href "/${{ github.event.repository.name }}/" \
+            --base-href "/" \
             --build-name=${{ needs.version.outputs.version }} \
             --build-number=${{ github.run_number }}
 
