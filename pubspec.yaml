@@ -109,6 +109,7 @@ flutter:
     - assets/icons/
     - assets/images/
     - assets/images/mascot/
+    - assets/videos/
 
 flutter_gen:
   output: lib/src/core/assets/

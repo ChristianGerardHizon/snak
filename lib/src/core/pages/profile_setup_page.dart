@@ -13,6 +13,7 @@ import '../../features/health/models/health_report.dart';
 import '../../features/students/data/students_repository.dart';
 import '../../features/students/models/student.dart';
 import '../widgets/form_feedback.dart';
+import '../widgets/rise_in_animation.dart';
 import 'information_confirmation_page.dart';
 import 'measurement_instruction_page.dart';
 import 'checking_result_page.dart';
@@ -448,8 +449,11 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                   final maxW = constraints.maxWidth;
                   final maxH = constraints.maxHeight;
 
-                  final cardW = (maxW * 0.94).clamp(360.0, 1100.0).toDouble();
-                  final cardH = (maxH * 0.86).clamp(420.0, 720.0).toDouble();
+                  final isPortrait = maxW < maxH * 0.95;
+                  final cardW = (maxW * 0.94).clamp(320.0, 1100.0).toDouble();
+                  final cardH = isPortrait
+                      ? (maxH * 0.92).clamp(560.0, 1100.0).toDouble()
+                      : (maxH * 0.86).clamp(420.0, 720.0).toDouble();
 
                   final logoW = (maxW * 0.12).clamp(72.0, 160.0).toDouble();
                   final logoH = logoW / SnakLogoRaster.aspect;
@@ -463,7 +467,8 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                       children: [
                         Expanded(
                           child: Center(
-                            child: _ProfileCard(
+                            child: RiseInAnimation(
+                              child: _ProfileCard(
                               cardWidth: cardW,
                               cardHeight: cardH,
                               fieldColor: ProfileSetupPage.fieldBlue,
@@ -503,16 +508,20 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                                 setState(() => _showConfirmation = true);
                               },
                               onBack: widget.onBack,
+                              ),
                             ),
                           ),
                         ),
                         SizedBox(height: maxH * 0.01),
-                        SizedBox(
-                          width: logoW,
-                          height: logoH,
-                          child: Assets.images.snakLogo.image(
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.high,
+                        RiseInAnimation(
+                          index: 1,
+                          child: SizedBox(
+                            width: logoW,
+                            height: logoH,
+                            child: Assets.images.snakLogo.image(
+                              fit: BoxFit.contain,
+                              filterQuality: FilterQuality.high,
+                            ),
                           ),
                         ),
                         SizedBox(height: edgePad * 0.4),
@@ -568,6 +577,10 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait = cardWidth < cardHeight * 0.85;
+    if (isPortrait) {
+      return _buildPortrait(context);
+    }
     final mascotColumnW = cardWidth * 0.42;
     final mascotH = (cardHeight * 0.78).clamp(0.0, cardHeight - 24).toDouble();
     final mascotW = mascotH * Mascot.aspect;
@@ -663,6 +676,114 @@ class _ProfileCard extends StatelessWidget {
               width: pillW,
               height: pillH,
               onPressed: onSubmit,
+            ),
+          ),
+          Positioned(
+            top: 4,
+            left: 4,
+            child: IconButton(
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              color: Colors.black54,
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortrait(BuildContext context) {
+    final pad = cardWidth * 0.05;
+    final pillH = 60.0;
+    final headlineSize = (cardWidth * 0.085).clamp(28.0, 44.0).toDouble();
+    final mascotH = (cardWidth * 0.32).clamp(110.0, 180.0).toDouble();
+    final mascotW = mascotH * Mascot.aspect;
+
+    return SizedBox(
+      width: cardWidth,
+      height: cardHeight,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.78),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(pad, pad * 1.2, pad, pad * 0.6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: mascotW,
+                      height: mascotH,
+                      child: Mascot.winking(width: mascotW, height: mascotH),
+                    ),
+                    SizedBox(width: pad * 0.6),
+                    Expanded(
+                      child: Text(
+                        'Tell me\nabout\nyourself!',
+                        style: TextStyle(
+                          color: _headlineRed,
+                          fontSize: headlineSize,
+                          fontWeight: FontWeight.w900,
+                          height: 1.0,
+                          letterSpacing: 0.4,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              offset: const Offset(0, 3),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: pad * 0.8),
+                Expanded(
+                  child: _ProfileForm(
+                    fieldColor: fieldColor,
+                    studentIdController: studentIdController,
+                    nameController: nameController,
+                    ageController: ageController,
+                    onAgeChanged: onAgeChanged,
+                    selectedGrade: selectedGrade,
+                    onGradeChanged: onGradeChanged,
+                    sectionController: sectionController,
+                    sex: sex,
+                    onSexChanged: onSexChanged,
+                  ),
+                ),
+                SizedBox(height: pad * 0.6),
+                SnakPillButton(
+                  label: "GOT IT! LET'S START",
+                  labelColor: actionColor,
+                  width: double.infinity,
+                  height: pillH,
+                  onPressed: onSubmit,
+                ),
+                SizedBox(height: pad * 0.2),
+              ],
             ),
           ),
           Positioned(

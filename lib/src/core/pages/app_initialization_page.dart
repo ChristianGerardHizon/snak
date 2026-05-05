@@ -43,29 +43,40 @@ class AppInitializationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Widget current;
     if (showProfileSetup) {
-      return ProfileSetupPage(
+      current = ProfileSetupPage(
+        key: const ValueKey('profile'),
         onComplete: onProfileComplete,
         onBack: onProfileBack,
         onReturnToStart: onReturnToStart,
         measurementResultOutcome: measurementResultOutcome,
       );
-    }
-    if (showJoin) {
-      return HealthMonitoringJoinPage(
+    } else if (showJoin) {
+      current = HealthMonitoringJoinPage(
+        key: const ValueKey('join'),
         onJoin: onJoinAccept,
         onDecline: onJoinDecline,
       );
-    }
-    if (showConsent) {
-      return HealthMonitoringConsentPage(
+    } else if (showConsent) {
+      current = HealthMonitoringConsentPage(
+        key: const ValueKey('consent'),
         onContinue: onConsentContinue,
         onBack: onConsentBack,
       );
+    } else {
+      current = SplashPage(
+        key: const ValueKey('splash'),
+        canContinue: canContinue,
+        onContinue: onSplashContinue,
+      );
     }
-    return SplashPage(
-      canContinue: canContinue,
-      onContinue: onSplashContinue,
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 350),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: current,
     );
   }
 }

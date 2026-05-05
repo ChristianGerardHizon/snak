@@ -59,10 +59,12 @@ class InformationConfirmationPage extends StatelessWidget {
                   final maxW = constraints.maxWidth;
                   final maxH = constraints.maxHeight;
 
+                  final isPortrait = maxW < maxH * 0.95;
                   final cardW =
-                      (maxW * 0.94).clamp(360.0, 1100.0).toDouble();
-                  final cardH =
-                      (maxH * 0.86).clamp(420.0, 720.0).toDouble();
+                      (maxW * 0.94).clamp(320.0, 1100.0).toDouble();
+                  final cardH = isPortrait
+                      ? (maxH * 0.92).clamp(560.0, 1100.0).toDouble()
+                      : (maxH * 0.86).clamp(420.0, 720.0).toDouble();
 
                   final logoW = (maxW * 0.12).clamp(72.0, 160.0).toDouble();
                   final logoH = logoW / SnakLogoRaster.aspect;
@@ -151,6 +153,10 @@ class _ConfirmationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait = cardWidth < cardHeight * 0.85;
+    if (isPortrait) {
+      return _buildPortrait(context);
+    }
     final mascotH = cardHeight * 0.62;
     final mascotW = mascotH * Mascot.aspect;
     final mascotColumnW = mascotW.clamp(0.0, cardWidth * 0.34);
@@ -306,6 +312,161 @@ class _ConfirmationCard extends StatelessWidget {
                   height: pillH,
                   onPressed: onBack,
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortrait(BuildContext context) {
+    final pad = cardWidth * 0.05;
+    final pillH = 60.0;
+    final headlineSize = (cardWidth * 0.07).clamp(24.0, 36.0).toDouble();
+    final labelSize = (cardWidth * 0.04).clamp(14.0, 20.0).toDouble();
+    final valueSize = (cardWidth * 0.05).clamp(18.0, 26.0).toDouble();
+    final mascotH = (cardWidth * 0.34).clamp(120.0, 200.0).toDouble();
+    final mascotW = mascotH * Mascot.aspect;
+
+    final labelStyle = TextStyle(
+      color: labelColor,
+      fontWeight: FontWeight.w900,
+      fontSize: labelSize,
+      letterSpacing: 0.4,
+      height: 1.1,
+    );
+    final valueStyle = TextStyle(
+      color: valueColor,
+      fontWeight: FontWeight.w800,
+      fontSize: valueSize,
+      height: 1.2,
+    );
+
+    return SizedBox(
+      width: cardWidth,
+      height: cardHeight,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.78),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(pad, pad * 1.2, pad, pad * 0.6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'IS THIS CORRECT?',
+                  style: TextStyle(
+                    color: headlineColor,
+                    fontSize: headlineSize,
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                SizedBox(height: pad * 0.8),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _InfoLine(
+                          label: 'ID NO.:',
+                          value: studentId,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
+                        ),
+                        SizedBox(height: pad * 0.5),
+                        _InfoLine(
+                          label: 'NAME:',
+                          value: name,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
+                        ),
+                        SizedBox(height: pad * 0.5),
+                        _InfoLine(
+                          label: 'AGE:',
+                          value: age,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
+                        ),
+                        SizedBox(height: pad * 0.5),
+                        _InfoLine(
+                          label: 'GENDER:',
+                          value: sex,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
+                        ),
+                        SizedBox(height: pad * 0.5),
+                        _InfoLine(
+                          label: 'GRADE:',
+                          value: grade,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
+                        ),
+                        SizedBox(height: pad * 0.5),
+                        _InfoLine(
+                          label: 'SECTION:',
+                          value: section,
+                          labelStyle: labelStyle,
+                          valueStyle: valueStyle,
+                        ),
+                        SizedBox(height: pad * 0.6),
+                        Center(
+                          child: Mascot.sitting(
+                            width: mascotW,
+                            height: mascotH,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: pad * 0.4),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: SnakPillButton(
+                        label: 'CONFIRM',
+                        labelColor: pillColor,
+                        width: double.infinity,
+                        height: pillH,
+                        onPressed: onConfirm,
+                      ),
+                    ),
+                    SizedBox(width: pad * 0.5),
+                    Expanded(
+                      flex: 2,
+                      child: SnakPillButton(
+                        label: 'BACK',
+                        labelColor: pillColor,
+                        width: double.infinity,
+                        height: pillH,
+                        onPressed: onBack,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: pad * 0.2),
               ],
             ),
           ),

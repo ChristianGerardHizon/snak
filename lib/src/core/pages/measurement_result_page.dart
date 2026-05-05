@@ -456,7 +456,7 @@ class _StudentInfoRows extends StatelessWidget {
             children: [
               cell('AGE:', age),
               SizedBox(height: (labelStyle.fontSize ?? 14) * 0.4),
-              cell('SEX:', sex),
+              cell('GENDER:', sex),
             ],
           ),
         ),
