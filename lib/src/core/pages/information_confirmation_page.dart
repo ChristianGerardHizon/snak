@@ -249,7 +249,7 @@ class _ConfirmationCard extends StatelessWidget {
                         ),
                         SizedBox(height: cardHeight * 0.025),
                         _InfoLine(
-                          label: 'SEX:',
+                          label: 'GENDER:',
                           value: sex,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
