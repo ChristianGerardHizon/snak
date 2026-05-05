@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -12,7 +14,7 @@ import 'measurement_result_page.dart';
 
 const String _reportBaseUrl = String.fromEnvironment(
   'SNAK_REPORT_BASE_URL',
-  defaultValue: 'https://snak.app/r',
+  defaultValue: 'https://christiangerardhizon.github.io/snak/#/reports',
 );
 
 String _reportUrl(String reportId) => '$_reportBaseUrl/$reportId';
@@ -25,11 +27,27 @@ class ResultsGatewayPage extends StatelessWidget {
     required this.outcome,
     required this.reportId,
     required this.onDone,
+    this.studentName,
+    this.schoolId,
+    this.age,
+    this.sex,
+    this.heightMeters,
+    this.weightKg,
+    this.bmi,
+    this.visitDate,
   });
 
   final MeasurementResultOutcome outcome;
   final String? reportId;
   final VoidCallback onDone;
+  final String? studentName;
+  final String? schoolId;
+  final int? age;
+  final String? sex;
+  final double? heightMeters;
+  final double? weightKg;
+  final double? bmi;
+  final DateTime? visitDate;
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +89,16 @@ class ResultsGatewayPage extends StatelessWidget {
                               cardWidth: cardW,
                               cardHeight: cardH,
                               spec: spec,
+                              outcome: outcome,
                               reportId: reportId,
+                              studentName: studentName,
+                              schoolId: schoolId,
+                              age: age,
+                              sex: sex,
+                              heightMeters: heightMeters,
+                              weightKg: weightKg,
+                              bmi: bmi,
+                              visitDate: visitDate,
                               onDone: onDone,
                             ),
                           ),
@@ -103,14 +130,32 @@ class _GatewayCard extends StatelessWidget {
     required this.cardWidth,
     required this.cardHeight,
     required this.spec,
+    required this.outcome,
     required this.reportId,
+    required this.studentName,
+    required this.schoolId,
+    required this.age,
+    required this.sex,
+    required this.heightMeters,
+    required this.weightKg,
+    required this.bmi,
+    required this.visitDate,
     required this.onDone,
   });
 
   final double cardWidth;
   final double cardHeight;
   final _SummarySpec spec;
+  final MeasurementResultOutcome outcome;
   final String? reportId;
+  final String? studentName;
+  final String? schoolId;
+  final int? age;
+  final String? sex;
+  final double? heightMeters;
+  final double? weightKg;
+  final double? bmi;
+  final DateTime? visitDate;
   final VoidCallback onDone;
 
   static const _bodyBlue = Color(0xFF2575FC);
@@ -161,7 +206,18 @@ class _GatewayCard extends StatelessWidget {
               printColor: _printGreen,
               onPrint: reportId == null
                   ? null
-                  : () => _downloadPdf(reportId!, spec),
+                  : () => _downloadPdf(
+                        reportId: reportId!,
+                        outcome: outcome,
+                        studentName: studentName,
+                        schoolId: schoolId,
+                        age: age,
+                        sex: sex,
+                        heightMeters: heightMeters,
+                        weightKg: weightKg,
+                        bmi: bmi,
+                        visitDate: visitDate,
+                      ),
             ),
           ),
           Positioned(
@@ -590,35 +646,298 @@ _SummarySpec _summaryFor(MeasurementResultOutcome o) {
   };
 }
 
-Future<void> _downloadPdf(String reportId, _SummarySpec spec) async {
+Future<void> _downloadPdf({
+  required String reportId,
+  required MeasurementResultOutcome outcome,
+  String? studentName,
+  String? schoolId,
+  int? age,
+  String? sex,
+  double? heightMeters,
+  double? weightKg,
+  double? bmi,
+  DateTime? visitDate,
+}) async {
+  final hSpec = healthOutcomeSpec(outcome);
   final url = _reportUrl(reportId);
+  final stamp = DateFormat('MMM d, yyyy | h:mm a')
+      .format(visitDate ?? DateTime.now())
+      .toUpperCase();
+
+  final displayHeight = heightMeters ?? hSpec.fallbackHeightM;
+  final displayWeight = weightKg ?? hSpec.fallbackWeightKg.toDouble();
+  final displayBmi = bmi ?? hSpec.fallbackBmi;
+
+  final logoBytes = (await rootBundle.load(Assets.images.snakLogo.path))
+      .buffer
+      .asUint8List();
+  final logoImg = pw.MemoryImage(logoBytes);
+
+  const ink = PdfColor.fromInt(0xFF3E2A18);
+  final cardBorder = PdfColor.fromInt(0xFFE7C97A);
+  final bannerBg = _toPdfColor(hSpec.bannerBg);
+  final bannerBorder = _toPdfColor(hSpec.bannerBorder);
+  final faceColor = _toPdfColor(hSpec.faceColor);
+  final footerColor = _toPdfColor(hSpec.footerColor);
+
+  final labelStyle = pw.TextStyle(
+    color: ink,
+    fontWeight: pw.FontWeight.bold,
+    fontSize: 11,
+    letterSpacing: 0.4,
+  );
+  final valueStyle = pw.TextStyle(
+    color: ink,
+    fontWeight: pw.FontWeight.bold,
+    fontSize: 11,
+    decoration: pw.TextDecoration.underline,
+  );
+
+  pw.Widget infoCell(String label, String value) => pw.RichText(
+        text: pw.TextSpan(
+          children: [
+            pw.TextSpan(text: label, style: labelStyle),
+            const pw.TextSpan(text: '  '),
+            pw.TextSpan(text: value, style: valueStyle),
+          ],
+        ),
+      );
+
+  pw.Widget measureLine(String label, String value) => pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: 90,
+            child: pw.Text(
+              label,
+              style: pw.TextStyle(
+                color: ink,
+                fontWeight: pw.FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Text(
+              value,
+              style: pw.TextStyle(
+                color: ink,
+                fontWeight: pw.FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+        ],
+      );
+
   final doc = pw.Document();
   doc.addPage(
     pw.Page(
       pageFormat: PdfPageFormat.a4,
-      build: (ctx) => pw.Center(
+      margin: const pw.EdgeInsets.all(24),
+      build: (ctx) => pw.Container(
+        decoration: pw.BoxDecoration(
+          color: PdfColors.white,
+          borderRadius: pw.BorderRadius.circular(20),
+          border: pw.Border.all(color: cardBorder, width: 2),
+        ),
+        padding: const pw.EdgeInsets.fromLTRB(28, 24, 28, 20),
         child: pw.Column(
-          mainAxisSize: pw.MainAxisSize.min,
+          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
-            pw.Text(
-              spec.title,
-              style: pw.TextStyle(
-                fontSize: 28,
-                fontWeight: pw.FontWeight.bold,
+            pw.Center(
+              child: pw.SizedBox(
+                width: 140,
+                child: pw.Image(logoImg, fit: pw.BoxFit.contain),
               ),
             ),
+            pw.SizedBox(height: 14),
+            // BMI banner
+            pw.Container(
+              decoration: pw.BoxDecoration(
+                color: bannerBg,
+                borderRadius: pw.BorderRadius.circular(10),
+                border: pw.Border.all(color: bannerBorder, width: 1.5),
+              ),
+              padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 12),
+              child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.center,
+                children: [
+                  _PdfFace(color: faceColor, smile: hSpec.smiling, size: 56),
+                  pw.SizedBox(width: 14),
+                  pw.Expanded(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                      children: [
+                        pw.Text(
+                          'YOUR BMI RESULT IS: ${displayBmi.toStringAsFixed(1)}',
+                          textAlign: pw.TextAlign.center,
+                          style: pw.TextStyle(
+                            color: ink,
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 14,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          hSpec.categoryTitle,
+                          textAlign: pw.TextAlign.center,
+                          style: pw.TextStyle(
+                            color: ink,
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 22,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 14),
+            pw.Center(
+              child: pw.Text(
+                stamp,
+                style: pw.TextStyle(
+                  color: ink,
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 11,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            pw.SizedBox(height: 10),
+            _PdfDottedDivider(color: ink),
             pw.SizedBox(height: 12),
-            pw.Text(spec.subtitle, style: const pw.TextStyle(fontSize: 14)),
-            pw.SizedBox(height: 24),
-            pw.BarcodeWidget(
-              barcode: pw.Barcode.qrCode(),
-              data: url,
-              width: 200,
-              height: 200,
+            pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Expanded(
+                  flex: 6,
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      infoCell('NAME:', studentName ?? '—'),
+                      pw.SizedBox(height: 6),
+                      infoCell('SCHOOL ID:', schoolId ?? '—'),
+                    ],
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 4,
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      infoCell('AGE:', age?.toString() ?? '—'),
+                      pw.SizedBox(height: 6),
+                      infoCell('SEX:', sex ?? '—'),
+                    ],
+                  ),
+                ),
+              ],
             ),
             pw.SizedBox(height: 12),
-            pw.Text('Scan to view your full report.',
-                style: const pw.TextStyle(fontSize: 11)),
+            _PdfDottedDivider(color: ink),
+            pw.SizedBox(height: 14),
+            measureLine(
+              'HEIGHT:',
+              '${displayHeight.toStringAsFixed(2)} meter',
+            ),
+            pw.SizedBox(height: 6),
+            measureLine(
+              'WEIGHT:',
+              '${displayWeight.toStringAsFixed(displayWeight.truncateToDouble() == displayWeight ? 0 : 1)} kilograms',
+            ),
+            pw.SizedBox(height: 14),
+            // Tips box
+            pw.Container(
+              decoration: pw.BoxDecoration(
+                color: PdfColors.white,
+                borderRadius: pw.BorderRadius.circular(10),
+                border: pw.Border.all(
+                  color: PdfColor.fromInt(0x733E2A18),
+                  width: 1,
+                ),
+              ),
+              padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 12),
+              child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.SizedBox(
+                    width: 70,
+                    child: pw.Text(
+                      'TIPS:',
+                      style: pw.TextStyle(
+                        color: ink,
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  pw.Expanded(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        for (final tip in hSpec.tips) ...[
+                          pw.Padding(
+                            padding:
+                                const pw.EdgeInsets.symmetric(vertical: 1.5),
+                            child: pw.Text(
+                              '• $tip',
+                              style: pw.TextStyle(
+                                color: ink,
+                                fontWeight: pw.FontWeight.bold,
+                                fontSize: 11,
+                                lineSpacing: 1.3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 16),
+            pw.Center(
+              child: pw.Text(
+                hSpec.footer,
+                style: pw.TextStyle(
+                  color: footerColor,
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 20,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
+            pw.Spacer(),
+            pw.Center(
+              child: pw.Column(
+                children: [
+                  pw.BarcodeWidget(
+                    barcode: pw.Barcode.qrCode(),
+                    data: url,
+                    width: 110,
+                    height: 110,
+                  ),
+                  pw.SizedBox(height: 6),
+                  pw.Text(
+                    'Scan to view your full report.',
+                    style: pw.TextStyle(
+                      color: ink,
+                      fontSize: 9,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -628,4 +947,95 @@ Future<void> _downloadPdf(String reportId, _SummarySpec spec) async {
     bytes: await doc.save(),
     filename: 'snak-results-$reportId.pdf',
   );
+}
+
+PdfColor _toPdfColor(Color c) => PdfColor.fromInt(c.toARGB32());
+
+class _PdfDottedDivider extends pw.StatelessWidget {
+  _PdfDottedDivider({required this.color});
+
+  final PdfColor color;
+
+  @override
+  pw.Widget build(pw.Context context) {
+    return pw.LayoutBuilder(builder: (ctx, constraints) {
+      final w = constraints?.maxWidth ?? 0;
+      const dash = 4.0;
+      const gap = 4.0;
+      final count = (w / (dash + gap)).floor();
+      return pw.Row(
+        children: [
+          for (var i = 0; i < count; i++) ...[
+            pw.Container(width: dash, height: 1.5, color: color),
+            pw.SizedBox(width: gap),
+          ],
+        ],
+      );
+    });
+  }
+}
+
+class _PdfFace extends pw.StatelessWidget {
+  _PdfFace({required this.color, required this.smile, required this.size});
+
+  final PdfColor color;
+  final bool smile;
+  final double size;
+
+  @override
+  pw.Widget build(pw.Context context) {
+    return pw.SizedBox(
+      width: size,
+      height: size,
+      child: pw.CustomPaint(
+        size: PdfPoint(size, size),
+        painter: (canvas, sz) {
+          final stroke = size * 0.06;
+          final r = size * 0.5 - stroke / 2;
+          final cx = size / 2;
+          final cy = size / 2;
+          canvas
+            ..setStrokeColor(color)
+            ..setLineWidth(stroke)
+            ..setLineCap(PdfLineCap.round)
+            ..drawEllipse(cx, cy, r, r)
+            ..strokePath();
+          // eyes
+          canvas
+            ..setFillColor(color)
+            ..drawEllipse(cx - r * 0.32, cy + r * 0.28, size * 0.05,
+                size * 0.05)
+            ..drawEllipse(cx + r * 0.32, cy + r * 0.28, size * 0.05,
+                size * 0.05)
+            ..fillPath();
+          // mouth: simple line/curve approximation
+          canvas
+            ..setStrokeColor(color)
+            ..setLineWidth(stroke);
+          if (smile) {
+            // arc downward (PDF y is up): smile = lower curve
+            final mY = cy - r * 0.18;
+            canvas
+              ..moveTo(cx - r * 0.45, mY)
+              ..curveTo(
+                cx - r * 0.2, mY - r * 0.45,
+                cx + r * 0.2, mY - r * 0.45,
+                cx + r * 0.45, mY,
+              )
+              ..strokePath();
+          } else {
+            final mY = cy - r * 0.42;
+            canvas
+              ..moveTo(cx - r * 0.45, mY)
+              ..curveTo(
+                cx - r * 0.2, mY + r * 0.35,
+                cx + r * 0.2, mY + r * 0.35,
+                cx + r * 0.45, mY,
+              )
+              ..strokePath();
+          }
+        },
+      ),
+    );
+  }
 }

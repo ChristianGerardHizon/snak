@@ -18,6 +18,7 @@ import 'information_confirmation_page.dart';
 import 'measurement_instruction_page.dart';
 import 'checking_result_page.dart';
 import 'measurement_result_page.dart';
+import 'report_data_overrides.dart';
 import 'results_gateway_page.dart';
 import 'stand_still_waiting_page.dart';
 import '../widgets/common/snak_pill_button.dart';
@@ -123,6 +124,18 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
         null => null,
       };
 
+  /// Map a manually-entered height/weight to a BMI category.
+  /// Cutoffs use a child-friendly approximation rather than strict adult
+  /// WHO bands so the demo presets land where a presenter expects.
+  MeasurementResultOutcome _outcomeFromBmi(double heightCm, double weightKg) {
+    final m = heightCm / 100.0;
+    if (m <= 0) return MeasurementResultOutcome.normal;
+    final bmi = weightKg / (m * m);
+    if (bmi < 14.0) return MeasurementResultOutcome.underweight;
+    if (bmi >= 18.0) return MeasurementResultOutcome.overweight;
+    return MeasurementResultOutcome.normal;
+  }
+
   /// Generate fake "machine reading" vitals matching the rolled outcome's spec.
   ({double heightCm, double weightKg, double tempC, int hr, String bp})
       _fakeVitals(MeasurementResultOutcome outcome) {
@@ -152,10 +165,25 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
     if (_persisting) return;
     setState(() => _persisting = true);
 
-    // Roll the outcome now so the persisted vitals match what's displayed.
-    final outcome = MeasurementResultOutcome
-        .values[Random().nextInt(MeasurementResultOutcome.values.length)];
-    final v = _fakeVitals(outcome);
+    final overrides = reportDataOverrides.value;
+
+    // If the user manually set vitals, derive the outcome from the resulting
+    // BMI so the printed report's category matches what they entered.
+    // Otherwise roll a random outcome and let _fakeVitals fill the rest.
+    final hasManualVitals =
+        overrides.heightCm != null && overrides.weightKg != null;
+    final outcome = hasManualVitals
+        ? _outcomeFromBmi(overrides.heightCm!, overrides.weightKg!)
+        : MeasurementResultOutcome
+            .values[Random().nextInt(MeasurementResultOutcome.values.length)];
+    final rolled = _fakeVitals(outcome);
+    final v = (
+      heightCm: overrides.heightCm ?? rolled.heightCm,
+      weightKg: overrides.weightKg ?? rolled.weightKg,
+      tempC: rolled.tempC,
+      hr: rolled.hr,
+      bp: rolled.bp,
+    );
 
     try {
       final ageText = _ageController.text.trim();
@@ -258,9 +286,27 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   @override
   Widget build(BuildContext context) {
     if (_showResultsGateway) {
+      final heightM =
+          _rolledHeightCm == null ? null : _rolledHeightCm! / 100.0;
+      final ageInt = int.tryParse(_ageController.text.trim());
+      final bmi = (heightM != null && _rolledWeightKg != null && heightM > 0)
+          ? _rolledWeightKg! / (heightM * heightM)
+          : null;
       return ResultsGatewayPage(
         outcome: _rolledMeasurementOutcome ?? widget.measurementResultOutcome,
         reportId: _rolledReportId,
+        studentName: _nameController.text.trim().isEmpty
+            ? null
+            : _nameController.text.trim(),
+        schoolId: _studentIdController.text.trim().isEmpty
+            ? null
+            : _studentIdController.text.trim(),
+        age: ageInt,
+        sex: _sexLabel(_sex),
+        heightMeters: heightM,
+        weightKg: _rolledWeightKg,
+        bmi: bmi,
+        visitDate: _rolledVisitDate,
         onDone: () {
           _restartForNextStudent();
           widget.onReturnToStart();

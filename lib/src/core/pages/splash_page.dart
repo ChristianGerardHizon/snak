@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
-import 'report_viewer_page.dart';
+import 'measurement_result_page.dart';
+import 'report_data_overrides.dart';
 
 class SplashPage extends HookWidget {
   const SplashPage({
@@ -106,11 +106,8 @@ class SplashPage extends HookWidget {
                         final midGap = size.height * 0.04;
                         final bottomGap = size.height * 0.04;
                         // Reserve space for fixed elements; whatever's left goes to the logo.
-                        final reserved = topGap +
-                            midGap +
-                            bottomGap +
-                            buttonHeight +
-                            _ReportLookupActions.estimatedHeight;
+                        final reserved =
+                            topGap + midGap + bottomGap + buttonHeight;
                         final maxLogoHeight = (constraints.maxHeight - reserved)
                             .clamp(0.0, logoBox.height);
                         final logoHeight = maxLogoHeight < logoBox.height
@@ -138,12 +135,28 @@ class SplashPage extends HookWidget {
                               labelColor: _startRed,
                             ),
                             SizedBox(height: midGap),
-                            const _ReportLookupActions(),
                             SizedBox(height: bottomGap),
                           ],
                         );
                       },
                     ),
+                  ),
+                ),
+              ),
+            ),
+            // Barely visible top-right button to set report-data overrides.
+            // Last in the Stack so it always paints on top of the splash UI.
+            Positioned(
+              top: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: IconButton(
+                    tooltip: 'Set report data',
+                    icon: const Icon(Icons.settings, size: 24),
+                    color: Colors.white,
+                    onPressed: () => _showOverrideDialog(context),
                   ),
                 ),
               ),
@@ -331,151 +344,119 @@ class _StartPill extends StatelessWidget {
   }
 }
 
-/// Last path segment of a URL, or the raw input if not a URL.
-String? _extractReportId(String raw) {
-  final value = raw.trim();
-  if (value.isEmpty) return null;
-  final uri = Uri.tryParse(value);
-  if (uri != null && uri.hasScheme && uri.pathSegments.isNotEmpty) {
-    final id = uri.pathSegments.lastWhere(
-      (s) => s.isNotEmpty,
-      orElse: () => '',
-    );
-    return id.isEmpty ? null : id;
-  }
-  return value;
-}
-
-void _openReport(BuildContext context, String reportId) {
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) => ReportViewerPage(reportId: reportId),
-    ),
+Future<void> _showOverrideDialog(BuildContext context) async {
+  final result = await showDialog<ReportDataOverrides>(
+    context: context,
+    builder: (_) => _ReportOverrideDialog(current: reportDataOverrides.value),
   );
+  if (result != null) {
+    reportDataOverrides.value = result;
+  }
 }
 
-class _ReportLookupActions extends StatelessWidget {
-  const _ReportLookupActions();
+/// Preset height/weight pairs that land squarely in each BMI category for a
+/// typical school-age learner.
+const _presets = <MeasurementResultOutcome, ({double heightCm, double weightKg})>{
+  MeasurementResultOutcome.underweight: (heightCm: 130, weightKg: 22),
+  MeasurementResultOutcome.normal: (heightCm: 130, weightKg: 30),
+  MeasurementResultOutcome.overweight: (heightCm: 130, weightKg: 42),
+};
 
-  static const double estimatedHeight = 40;
+class _ReportOverrideDialog extends HookWidget {
+  const _ReportOverrideDialog({required this.current});
 
-  Future<void> _enterCode(BuildContext context) async {
-    final controller = TextEditingController();
-    final code = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Enter report code'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Report code'),
-          onSubmitted: (v) => Navigator.of(ctx).pop(v),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text),
-            child: const Text('View'),
-          ),
-        ],
-      ),
-    );
-    if (code == null) return;
-    final id = _extractReportId(code);
-    if (id == null) return;
-    if (!context.mounted) return;
-    _openReport(context, id);
-  }
-
-  Future<void> _scanQr(BuildContext context) async {
-    final code = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => const _QrScannerPage()),
-    );
-    if (code == null) return;
-    final id = _extractReportId(code);
-    if (id == null) return;
-    if (!context.mounted) return;
-    _openReport(context, id);
-  }
+  final ReportDataOverrides current;
 
   @override
   Widget build(BuildContext context) {
-    const fg = Colors.white;
-    final style = TextButton.styleFrom(
-      foregroundColor: fg,
-      side: BorderSide(color: fg.withValues(alpha: 0.7), width: 1.4),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      minimumSize: const Size(0, 40),
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+    final heightCtl = useTextEditingController(
+      text: current.heightCm?.toString() ?? '',
     );
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 12,
-      runSpacing: 8,
-      children: [
-        OutlinedButton.icon(
-          style: style,
-          onPressed: () => _enterCode(context),
-          icon: const Icon(Icons.keyboard_alt_outlined, size: 18),
-          label: const Text('ENTER CODE'),
+    final weightCtl = useTextEditingController(
+      text: current.weightKg?.toString() ?? '',
+    );
+
+    void applyPreset(MeasurementResultOutcome o) {
+      final p = _presets[o]!;
+      heightCtl.text = p.heightCm.toString();
+      weightCtl.text = p.weightKg.toString();
+    }
+
+    return AlertDialog(
+      title: const Text('Set measured vitals'),
+      content: SizedBox(
+        width: 360,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Leave blank to keep the auto-generated random value.',
+              style: TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: heightCtl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Height (cm)'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: weightCtl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Weight (kg)'),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Presets',
+              style: TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final o in MeasurementResultOutcome.values)
+                  OutlinedButton(
+                    onPressed: () => applyPreset(o),
+                    child: Text(_presetLabel(o)),
+                  ),
+              ],
+            ),
+          ],
         ),
-        OutlinedButton.icon(
-          style: style,
-          onPressed: () => _scanQr(context),
-          icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
-          label: const Text('SCAN QR'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(const ReportDataOverrides());
+          },
+          child: const Text('Clear'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop(
+              ReportDataOverrides(
+                heightCm: double.tryParse(heightCtl.text.trim()),
+                weightKg: double.tryParse(weightCtl.text.trim()),
+              ),
+            );
+          },
+          child: const Text('Save'),
         ),
       ],
     );
   }
-}
 
-class _QrScannerPage extends StatefulWidget {
-  const _QrScannerPage();
-
-  @override
-  State<_QrScannerPage> createState() => _QrScannerPageState();
-}
-
-class _QrScannerPageState extends State<_QrScannerPage> {
-  final MobileScannerController _controller = MobileScannerController();
-  bool _handled = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onDetect(BarcodeCapture capture) {
-    if (_handled) return;
-    final value = capture.barcodes
-        .map((b) => b.rawValue)
-        .firstWhere((v) => v != null && v.isNotEmpty, orElse: () => null);
-    if (value == null) return;
-    _handled = true;
-    // Defer to next frame so the scanner widget isn't torn down mid-callback,
-    // which on desktop trips a mouse-tracker assertion.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _controller.stop();
-      if (!mounted) return;
-      Navigator.of(context).pop(value);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Scan report QR')),
-      body: MobileScanner(
-        controller: _controller,
-        onDetect: _onDetect,
-      ),
-    );
-  }
+  static String _presetLabel(MeasurementResultOutcome o) => switch (o) {
+        MeasurementResultOutcome.underweight => 'Underweight',
+        MeasurementResultOutcome.normal => 'Normal',
+        MeasurementResultOutcome.overweight => 'Overweight',
+      };
 }
