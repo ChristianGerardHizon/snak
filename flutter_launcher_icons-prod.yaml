@@ -1,9 +1,14 @@
 flutter_launcher_icons:
   android: "launcher_icon"
   min_sdk_android: 21
-  image_path: "assets/icons/snak_logo.png"
+  image_path: "assets/icons/snak_logo_square.png"
   adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/icons/snak_logo.png"
-  adaptive_icon_monochrome: "assets/icons/snak_logo.png"
+  adaptive_icon_foreground: "assets/icons/snak_logo_square.png"
+  adaptive_icon_monochrome: "assets/icons/snak_logo_square.png"
   flavor: prod
   android_path: "android/app/src/prod/res/"
+  web:
+    generate: true
+    image_path: "assets/icons/snak_logo_square.png"
+    background_color: "#ffffff"
+    theme_color: "#027DFD"

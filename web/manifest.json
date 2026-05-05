@@ -1,11 +1,11 @@
 {
-    "name": "Snak",
-    "short_name": "Snak",
+    "name": "Snack",
+    "short_name": "Snack",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#027DFD",
-    "description": "Snak — Flutter app shell.",
+    "description": "Student health and nutrition tracker with BMI-for-age screening and growth guidance.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

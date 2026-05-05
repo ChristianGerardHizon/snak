@@ -16,7 +16,7 @@ abstract class SnakLogoRaster {
 /// Application metadata and configuration
 abstract class AppConstants {
   /// Application name
-  static const String appName = 'Snak';
+  static const String appName = 'Snack';
 
   /// Application version (synced with pubspec.yaml)
   static const String version = '1.0.0';

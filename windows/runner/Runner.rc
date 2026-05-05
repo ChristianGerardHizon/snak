@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "2doit" "\0"
-            VALUE "FileDescription", "Snak" "\0"
+            VALUE "FileDescription", "Snack" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "Snak" "\0"
+            VALUE "InternalName", "Snack" "\0"
             VALUE "LegalCopyright", "2doit" "\0"
             VALUE "OriginalFilename", "kwarta.exe" "\0"
-            VALUE "ProductName", "Snak" "\0"
+            VALUE "ProductName", "Snack" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

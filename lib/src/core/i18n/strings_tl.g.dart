@@ -92,7 +92,7 @@ class _TranslationsCommonTl implements TranslationsCommonEn {
 	final TranslationsTl _root; // ignore: unused_field
 
 	// Translations
-	@override String get appName => 'Snak';
+	@override String get appName => 'Snack';
 	@override String get placeholderText => 'N/A';
 	@override String get save => 'I-save';
 	@override String get cancel => 'Kanselahin';
@@ -288,7 +288,7 @@ extension on TranslationsTl {
 			'auth.dontHaveAccount' => 'Wala pang account? Mag-sign up',
 			'auth.signUpSuccess' => 'Nagawa na ang account! Tingnan ang iyong email para ma-verify.',
 			'auth.passwordsDoNotMatch' => 'Hindi magkatugma ang mga password',
-			'common.appName' => 'Snak',
+			'common.appName' => 'Snack',
 			'common.placeholderText' => 'N/A',
 			'common.save' => 'I-save',
 			'common.cancel' => 'Kanselahin',

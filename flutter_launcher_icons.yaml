@@ -1,11 +1,11 @@
 # flutter pub run flutter_launcher_icons
 flutter_launcher_icons:
-  image_path: "assets/icons/snak_logo.png"
+  image_path: "assets/icons/snak_logo_square.png"
   android: "launcher_icon"
   min_sdk_android: 21 # android min sdk min:16, default 21
   adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/icons/snak_logo.png"
-  adaptive_icon_monochrome: "assets/icons/snak_logo.png"
+  adaptive_icon_foreground: "assets/icons/snak_logo_square.png"
+  adaptive_icon_monochrome: "assets/icons/snak_logo_square.png"
 
   ios: true
   # image_path_ios: "assets/icon/icon.png"
@@ -16,15 +16,15 @@ flutter_launcher_icons:
 
   web:
     generate: true
-    image_path: "assets/icons/snak_logo.png"
+    image_path: "assets/icons/snak_logo_square.png"
     background_color: "#ffffff"
     theme_color: "#027DFD"
 
   windows:
     generate: true
-    image_path: "assets/icons/snak_logo.png"
+    image_path: "assets/icons/snak_logo_square.png"
     icon_size: 48 # min:48, max:256, default: 48
 
   macos:
     generate: true
-    image_path: "assets/icons/snak_logo.png"
+    image_path: "assets/icons/snak_logo_square.png"

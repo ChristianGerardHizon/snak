@@ -141,8 +141,8 @@ class TranslationsCommonEn {
 
 	// Translations
 
-	/// en: 'Snak'
-	String get appName => 'Snak';
+	/// en: 'Snack'
+	String get appName => 'Snack';
 
 	/// en: 'N/A'
 	String get placeholderText => 'N/A';
@@ -566,7 +566,7 @@ extension on Translations {
 			'auth.dontHaveAccount' => 'Don\'t have an account? Sign up',
 			'auth.signUpSuccess' => 'Account created! Please check your email to verify.',
 			'auth.passwordsDoNotMatch' => 'Passwords do not match',
-			'common.appName' => 'Snak',
+			'common.appName' => 'Snack',
 			'common.placeholderText' => 'N/A',
 			'common.save' => 'Save',
 			'common.cancel' => 'Cancel',

@@ -44,17 +44,17 @@ android {
         create("dev") {
             dimension = "environment"
             applicationId = "dev.com.hznsystems.snak"
-            resValue("string", "app_name", "Snak Dev")
+            resValue("string", "app_name", "Snack Dev")
         }
         create("staging") {
             dimension = "environment"
             applicationId = "staging.com.hznsystems.snak"
-            resValue("string", "app_name", "Snak Staging")
+            resValue("string", "app_name", "Snack Staging")
         }
         create("prod") {
             dimension = "environment"
             applicationId = "com.hznsystems.snak"
-            resValue("string", "app_name", "Snak")
+            resValue("string", "app_name", "Snack")
         }
     }
 

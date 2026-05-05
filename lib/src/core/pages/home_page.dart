@@ -17,7 +17,7 @@ class HomePage extends StatelessWidget {
         type: MaterialType.transparency,
         child: Center(
           child: Text(
-            'Snak shell — add feature modules under lib/src/features/.',
+            'Snack shell — add feature modules under lib/src/features/.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
