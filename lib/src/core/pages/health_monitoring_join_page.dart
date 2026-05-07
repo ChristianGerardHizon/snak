@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
+import '../packages/theme/app_themes.dart';
 import '../widgets/common/mascot.dart';
 import '../widgets/rise_in_animation.dart';
 
@@ -138,7 +139,7 @@ class _CardWithMascot extends StatelessWidget {
     final joinW = (cardWidth * 0.5).clamp(260.0, 560.0).toDouble();
     final noW = (cardWidth * 0.16).clamp(120.0, 200.0).toDouble();
 
-    final mascotColumnW = mascotWidth.clamp(0.0, cardWidth * 0.42);
+    final mascotColumnW = mascotWidth.clamp(0.0, cardWidth * 0.42) * 1.4;
 
     return SizedBox(
       width: cardWidth,
@@ -237,6 +238,7 @@ class _CardWithMascot extends StatelessWidget {
                     child: SingleChildScrollView(
                       child: DefaultTextStyle(
                         style: TextStyle(
+                          fontFamily: AppThemes.fontFamily,
                           color: bodyColor,
                           fontSize: bodySize,
                           fontWeight: FontWeight.w900,
@@ -338,6 +340,7 @@ class _BodyCard extends StatelessWidget {
             ),
             child: DefaultTextStyle(
               style: TextStyle(
+                fontFamily: AppThemes.fontFamily,
                 color: bodyColor,
                 fontSize: bodySize,
                 fontWeight: FontWeight.w900,

@@ -16,6 +16,9 @@ class AppThemes {
   /// Default seed color for the app.
   static const Color seedColor = Colors.blue;
 
+  /// App-wide font family.
+  static const String fontFamily = 'AlmondMocca';
+
   /// Light theme definition.
   static AppTheme light() => AppTheme(
         id: lightId,
@@ -26,6 +29,7 @@ class AppThemes {
             brightness: Brightness.light,
           ),
           useMaterial3: true,
+          fontFamily: fontFamily,
         ),
       );
 
@@ -39,6 +43,7 @@ class AppThemes {
             brightness: Brightness.dark,
           ),
           useMaterial3: true,
+          fontFamily: fontFamily,
         ),
       );
 

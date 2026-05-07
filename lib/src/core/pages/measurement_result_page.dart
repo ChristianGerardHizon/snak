@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/snak_pill_button.dart';
+import '../packages/theme/app_themes.dart';
 
 /// BMI-style result for [MeasurementResultPage] (Health Findings).
 enum MeasurementResultOutcome {
@@ -154,6 +155,7 @@ class _ResultCard extends StatelessWidget {
     final footerSize = (width * 0.05).clamp(20.0, 38.0).toDouble();
 
     final labelStyle = TextStyle(
+      fontFamily: AppThemes.fontFamily,
       color: MeasurementResultPage._ink,
       fontWeight: FontWeight.w900,
       fontSize: labelSize,
@@ -161,12 +163,10 @@ class _ResultCard extends StatelessWidget {
       height: 1.1,
     );
     final valueStyle = TextStyle(
+      fontFamily: AppThemes.fontFamily,
       color: MeasurementResultPage._ink,
       fontWeight: FontWeight.w800,
       fontSize: valueSize,
-      decoration: TextDecoration.underline,
-      decorationColor: MeasurementResultPage._ink,
-      decorationThickness: 1.5,
       height: 1.1,
     );
 
@@ -216,6 +216,7 @@ class _ResultCard extends StatelessWidget {
                   child: Text(
                     stamp,
                     style: TextStyle(
+                      fontFamily: AppThemes.fontFamily,
                       color: MeasurementResultPage._ink,
                       fontWeight: FontWeight.w900,
                       fontSize: labelSize,
@@ -259,6 +260,7 @@ class _ResultCard extends StatelessWidget {
                   child: Text(
                     spec.footer,
                     style: TextStyle(
+                      fontFamily: AppThemes.fontFamily,
                       color: spec.footerColor,
                       fontWeight: FontWeight.w900,
                       fontSize: footerSize,
@@ -333,6 +335,7 @@ class _BmiBanner extends StatelessWidget {
                     'YOUR BMI RESULT IS: ${bmi.toStringAsFixed(1)}',
                     textAlign: TextAlign.center,
                     style: TextStyle(
+                      fontFamily: AppThemes.fontFamily,
                       color: MeasurementResultPage._ink,
                       fontWeight: FontWeight.w900,
                       fontSize: headerSize * 0.72,
@@ -344,6 +347,7 @@ class _BmiBanner extends StatelessWidget {
                     spec.categoryTitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
+                      fontFamily: AppThemes.fontFamily,
                       color: MeasurementResultPage._ink,
                       fontWeight: FontWeight.w900,
                       fontSize: headerSize * 1.15,
@@ -485,6 +489,7 @@ class _MeasureLine extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
+              fontFamily: AppThemes.fontFamily,
               color: MeasurementResultPage._ink,
               fontWeight: FontWeight.w900,
               fontSize: fontSize,
@@ -496,6 +501,7 @@ class _MeasureLine extends StatelessWidget {
           child: Text(
             value,
             style: TextStyle(
+              fontFamily: AppThemes.fontFamily,
               color: MeasurementResultPage._ink,
               fontWeight: FontWeight.w900,
               fontSize: fontSize,
@@ -539,6 +545,7 @@ class _TipsBox extends StatelessWidget {
                 Text(
                   'TIPS:',
                   style: TextStyle(
+                    fontFamily: AppThemes.fontFamily,
                     color: MeasurementResultPage._ink,
                     fontWeight: FontWeight.w900,
                     fontSize: fontSize * 1.15,
@@ -572,6 +579,7 @@ class _TipsBox extends StatelessWidget {
                     Text(
                       tips[i],
                       style: TextStyle(
+                        fontFamily: AppThemes.fontFamily,
                         color: MeasurementResultPage._ink,
                         fontWeight: FontWeight.w800,
                         fontSize: fontSize,

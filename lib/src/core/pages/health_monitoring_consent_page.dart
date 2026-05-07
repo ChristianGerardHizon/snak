@@ -4,6 +4,7 @@ import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
 import '../widgets/rise_in_animation.dart';
+import '../packages/theme/app_themes.dart';
 
 /// School health-monitoring consent step.
 ///
@@ -144,7 +145,7 @@ class _CardWithMascot extends StatelessWidget {
 
     // Reserve a column on the right of the card for the mascot. The card
     // text is inset by this amount so it never runs under the mascot.
-    final mascotColumnW = mascotWidth.clamp(0.0, cardWidth * 0.42);
+    final mascotColumnW = mascotWidth.clamp(0.0, cardWidth * 0.42) * 1.4;
 
     return SizedBox(
       width: cardWidth,
@@ -237,6 +238,7 @@ class _CardWithMascot extends StatelessWidget {
                             'Hello Healthy Human!',
                             textAlign: TextAlign.center,
                             style: TextStyle(
+                              fontFamily: AppThemes.fontFamily,
                               color: titleColor,
                               fontSize: titleSize,
                               fontWeight: FontWeight.w900,
@@ -249,6 +251,7 @@ class _CardWithMascot extends StatelessWidget {
                             textAlign: TextAlign.center,
                             text: TextSpan(
                               style: TextStyle(
+                                fontFamily: AppThemes.fontFamily,
                                 color: bodyColor,
                                 fontSize: bodySize,
                                 fontWeight: FontWeight.w800,
@@ -258,12 +261,16 @@ class _CardWithMascot extends StatelessWidget {
                                 const TextSpan(text: 'We will measure your '),
                                 TextSpan(
                                   text: 'height',
-                                  style: TextStyle(color: highlightColor),
+                                  style: TextStyle(
+                                      fontFamily: AppThemes.fontFamily,
+                                      color: highlightColor),
                                 ),
                                 const TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'weight',
-                                  style: TextStyle(color: highlightColor),
+                                  style: TextStyle(
+                                      fontFamily: AppThemes.fontFamily,
+                                      color: highlightColor),
                                 ),
                                 const TextSpan(
                                   text:
@@ -352,17 +359,19 @@ class _ConsentCard extends StatelessWidget {
                 Text(
                   'Hello Healthy Human!',
                   style: TextStyle(
+                    fontFamily: AppThemes.fontFamily,
                     color: titleColor,
                     fontSize: titleSize,
                     fontWeight: FontWeight.w900,
                     height: 1.1,
-                    letterSpacing: 0.2,
+                    letterSpacing: 0.1,
                   ),
                 ),
                 SizedBox(height: padV * 0.45),
                 RichText(
                   text: TextSpan(
                     style: TextStyle(
+                      fontFamily: AppThemes.fontFamily,
                       color: bodyColor,
                       fontSize: bodySize,
                       fontWeight: FontWeight.w800,
@@ -372,12 +381,16 @@ class _ConsentCard extends StatelessWidget {
                       const TextSpan(text: 'We will measure your '),
                       TextSpan(
                         text: 'height',
-                        style: TextStyle(color: highlightColor),
+                        style: TextStyle(
+                            fontFamily: AppThemes.fontFamily,
+                            color: highlightColor),
                       ),
                       const TextSpan(text: ' and '),
                       TextSpan(
                         text: 'weight',
-                        style: TextStyle(color: highlightColor),
+                        style: TextStyle(
+                            fontFamily: AppThemes.fontFamily,
+                            color: highlightColor),
                       ),
                       const TextSpan(
                         text:
@@ -447,6 +460,7 @@ class _NextPill extends StatelessWidget {
               child: Text(
                 'NEXT',
                 style: TextStyle(
+                  fontFamily: AppThemes.fontFamily,
                   color: Colors.white,
                   fontSize: fontSize,
                   fontWeight: FontWeight.w900,

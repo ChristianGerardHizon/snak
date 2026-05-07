@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
+import '../packages/theme/app_themes.dart';
 
 /// Shown after measurement instructions while the student is being measured.
 ///
@@ -53,6 +54,7 @@ class _StandStillWaitingPageState extends State<StandStillWaitingPage> {
         final headlineSize = (maxW * 0.065).clamp(26.0, 44.0).toDouble();
 
         final headlineStyle = TextStyle(
+          fontFamily: AppThemes.fontFamily,
           color: Colors.white,
           fontWeight: FontWeight.w800,
           fontSize: headlineSize,

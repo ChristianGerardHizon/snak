@@ -110,6 +110,10 @@ flutter:
     - assets/images/
     - assets/images/mascot/
     - assets/videos/
+  fonts:
+    - family: AlmondMocca
+      fonts:
+        - asset: assets/fonts/almond_mocca.otf
 
 flutter_gen:
   output: lib/src/core/assets/
