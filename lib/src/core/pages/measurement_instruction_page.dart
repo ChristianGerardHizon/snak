@@ -4,6 +4,7 @@ import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/snak_pill_button.dart';
 import '../widgets/common/mascot.dart';
+import '../packages/theme/app_themes.dart';
 
 /// Shown after profile confirmation; reminds the student how to stand for measurement.
 ///
@@ -76,6 +77,7 @@ class MeasurementInstructionPage extends StatelessWidget {
                       : (buttonW / 3.45).clamp(56.0, 96.0).toDouble();
 
                   final instructionTextStyle = TextStyle(
+                    fontFamily: AppThemes.fontFamily,
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 260,

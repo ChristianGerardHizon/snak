@@ -12,6 +12,7 @@ import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
 import '../widgets/common/snak_pill_button.dart';
 import 'measurement_result_page.dart';
+import '../packages/theme/app_themes.dart';
 
 const String _reportBaseUrlOverride =
     String.fromEnvironment('SNAK_REPORT_BASE_URL');
@@ -466,6 +467,7 @@ class _PortraitSummary extends StatelessWidget {
                   Text(
                     spec.title,
                     style: TextStyle(
+                      fontFamily: AppThemes.fontFamily,
                       color: const Color(0xFF5A3A1F),
                       fontWeight: FontWeight.w900,
                       fontSize: titleSize,
@@ -476,6 +478,7 @@ class _PortraitSummary extends StatelessWidget {
                   Text(
                     spec.subtitle,
                     style: TextStyle(
+                      fontFamily: AppThemes.fontFamily,
                       color: const Color(0xFF5A3A1F),
                       fontWeight: FontWeight.w700,
                       fontSize: subSize,
@@ -542,6 +545,7 @@ class _ResultsHereBanner extends StatelessWidget {
                       'Get your\nResults here!',
                       textAlign: TextAlign.center,
                       style: TextStyle(
+                        fontFamily: AppThemes.fontFamily,
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
                         fontSize: height * 0.32,
@@ -598,72 +602,89 @@ class _CopyableQrCodeState extends State<_CopyableQrCode> {
 
   @override
   Widget build(BuildContext context) {
-    final size = widget.size;
     final reportId = widget.reportId;
     final enabled = reportId != null;
 
-    final qr = Container(
-      width: size,
-      height: size,
-      padding: EdgeInsets.all(size * 0.06),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(size * 0.08),
-        border: Border.all(
-          color: const Color(0xFFB8CDEB),
-          width: 3,
-        ),
-      ),
-      child: !enabled
-          ? const Center(
-              child: Icon(Icons.qr_code_2_rounded,
-                  size: 100, color: Colors.black26),
-            )
-          : QrImageView(
-              data: _reportUrl(reportId),
-              backgroundColor: Colors.white,
-              eyeStyle: const QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: Color(0xFF2C4A8C),
-              ),
-              dataModuleStyle: const QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: Color(0xFF2C4A8C),
-              ),
-            ),
-    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final labelFontSize =
+            (widget.size * 0.06).clamp(12.0, 18.0).toDouble();
+        // Reserve space for the label + spacer below the QR.
+        final reservedForLabel =
+            labelFontSize * 1.4 + widget.size * 0.04;
+        final maxQrFromHeight = constraints.hasBoundedHeight
+            ? (constraints.maxHeight - reservedForLabel)
+                .clamp(0.0, double.infinity)
+            : widget.size;
+        final size = widget.size < maxQrFromHeight
+            ? widget.size
+            : maxQrFromHeight.toDouble();
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        MouseRegion(
-          cursor: enabled
-              ? SystemMouseCursors.click
-              : SystemMouseCursors.basic,
-          child: GestureDetector(
-            onTap: enabled ? _copy : null,
-            child: qr,
-          ),
-        ),
-        SizedBox(height: size * 0.04),
-        MouseRegion(
-          cursor: enabled
-              ? SystemMouseCursors.click
-              : SystemMouseCursors.basic,
-          child: GestureDetector(
-            onTap: enabled ? _copy : null,
-            child: Text(
-              _justCopied ? 'Copied!' : 'Copy to clipboard',
-              style: TextStyle(
-                color: const Color(0xFF2C4A8C),
-                fontSize: (size * 0.06).clamp(12.0, 18.0),
-                fontWeight: FontWeight.w700,
-                decoration: TextDecoration.underline,
-              ),
+        final qr = Container(
+          width: size,
+          height: size,
+          padding: EdgeInsets.all(size * 0.06),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(size * 0.08),
+            border: Border.all(
+              color: const Color(0xFFB8CDEB),
+              width: 3,
             ),
           ),
-        ),
-      ],
+          child: !enabled
+              ? const Center(
+                  child: Icon(Icons.qr_code_2_rounded,
+                      size: 100, color: Colors.black26),
+                )
+              : QrImageView(
+                  data: _reportUrl(reportId),
+                  backgroundColor: Colors.white,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: Color(0xFF2C4A8C),
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Color(0xFF2C4A8C),
+                  ),
+                ),
+        );
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MouseRegion(
+              cursor: enabled
+                  ? SystemMouseCursors.click
+                  : SystemMouseCursors.basic,
+              child: GestureDetector(
+                onTap: enabled ? _copy : null,
+                child: qr,
+              ),
+            ),
+            SizedBox(height: size * 0.04),
+            MouseRegion(
+              cursor: enabled
+                  ? SystemMouseCursors.click
+                  : SystemMouseCursors.basic,
+              child: GestureDetector(
+                onTap: enabled ? _copy : null,
+                child: Text(
+                  _justCopied ? 'Copied!' : 'Copy to clipboard',
+                  style: TextStyle(
+                    fontFamily: AppThemes.fontFamily,
+                    color: const Color(0xFF2C4A8C),
+                    fontSize: labelFontSize,
+                    fontWeight: FontWeight.w700,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -684,6 +705,7 @@ class _ClickPrintLine extends StatelessWidget {
     return RichText(
       text: TextSpan(
         style: TextStyle(
+          fontFamily: AppThemes.fontFamily,
           color: baseColor,
           fontSize: fontSize,
           fontWeight: FontWeight.w900,
@@ -693,7 +715,8 @@ class _ClickPrintLine extends StatelessWidget {
           const TextSpan(text: 'Click '),
           TextSpan(
             text: 'PRINT',
-            style: TextStyle(color: highlightColor),
+            style: TextStyle(
+              fontFamily: AppThemes.fontFamily,color: highlightColor),
           ),
           const TextSpan(
             text:
@@ -760,6 +783,7 @@ class _PhoneMock extends StatelessWidget {
                       Text(
                         spec.title,
                         style: TextStyle(
+                          fontFamily: AppThemes.fontFamily,
                           color: const Color(0xFF5A3A1F),
                           fontWeight: FontWeight.w900,
                           fontSize: phoneW * 0.085,
@@ -771,6 +795,7 @@ class _PhoneMock extends StatelessWidget {
                         spec.subtitle,
                         textAlign: TextAlign.center,
                         style: TextStyle(
+                          fontFamily: AppThemes.fontFamily,
                           color: const Color(0xFF5A3A1F),
                           fontWeight: FontWeight.w800,
                           fontSize: phoneW * 0.05,
@@ -848,6 +873,7 @@ class _ColorLegend extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
+                  fontFamily: AppThemes.fontFamily,
                   color: const Color(0xFF5A3A1F),
                   fontWeight: FontWeight.w800,
                   fontSize: fontSize,
@@ -874,6 +900,7 @@ class _ColorLegend extends StatelessWidget {
             Text(
               'Color-coded\nresult:',
               style: TextStyle(
+                fontFamily: AppThemes.fontFamily,
                 color: const Color(0xFF5A3A1F),
                 fontWeight: FontWeight.w900,
                 fontSize: fontSize * 0.95,

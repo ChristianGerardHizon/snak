@@ -4,6 +4,7 @@ import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/snak_pill_button.dart';
 import '../widgets/common/mascot.dart';
+import '../packages/theme/app_themes.dart';
 
 /// Read-only review of student profile before finishing onboarding.
 ///
@@ -171,6 +172,7 @@ class _ConfirmationCard extends StatelessWidget {
     final valueSize = (cardWidth * 0.028).clamp(16.0, 30.0).toDouble();
 
     final labelStyle = TextStyle(
+      fontFamily: AppThemes.fontFamily,
       color: labelColor,
       fontWeight: FontWeight.w900,
       fontSize: labelSize,
@@ -178,6 +180,7 @@ class _ConfirmationCard extends StatelessWidget {
       height: 1.1,
     );
     final valueStyle = TextStyle(
+      fontFamily: AppThemes.fontFamily,
       color: valueColor,
       fontWeight: FontWeight.w800,
       fontSize: valueSize,
@@ -220,6 +223,7 @@ class _ConfirmationCard extends StatelessWidget {
                 Text(
                   'IS THIS CORRECT?',
                   style: TextStyle(
+                    fontFamily: AppThemes.fontFamily,
                     color: headlineColor,
                     fontSize: headlineSize,
                     fontWeight: FontWeight.w900,
@@ -330,6 +334,7 @@ class _ConfirmationCard extends StatelessWidget {
     final mascotW = mascotH * Mascot.aspect;
 
     final labelStyle = TextStyle(
+      fontFamily: AppThemes.fontFamily,
       color: labelColor,
       fontWeight: FontWeight.w900,
       fontSize: labelSize,
@@ -337,6 +342,7 @@ class _ConfirmationCard extends StatelessWidget {
       height: 1.1,
     );
     final valueStyle = TextStyle(
+      fontFamily: AppThemes.fontFamily,
       color: valueColor,
       fontWeight: FontWeight.w800,
       fontSize: valueSize,
@@ -375,6 +381,7 @@ class _ConfirmationCard extends StatelessWidget {
                 Text(
                   'IS THIS CORRECT?',
                   style: TextStyle(
+                    fontFamily: AppThemes.fontFamily,
                     color: headlineColor,
                     fontSize: headlineSize,
                     fontWeight: FontWeight.w900,

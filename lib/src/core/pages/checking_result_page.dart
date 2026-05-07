@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
+import '../packages/theme/app_themes.dart';
 
 /// Shown after stand-still; displays for 8 seconds with a filling progress bar,
 /// then calls [onComplete].
@@ -83,6 +84,7 @@ class _CheckingResultPageState extends State<CheckingResultPage>
                   final logoH = logoW / SnakLogoRaster.aspect;
 
                   final headlineStyle = TextStyle(
+                    fontFamily: AppThemes.fontFamily,
                     color: _headlineRed,
                     fontWeight: FontWeight.w900,
                     fontSize: headlineSize,

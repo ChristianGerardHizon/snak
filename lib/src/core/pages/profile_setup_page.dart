@@ -23,6 +23,7 @@ import 'results_gateway_page.dart';
 import 'stand_still_waiting_page.dart';
 import '../widgets/common/snak_pill_button.dart';
 import '../widgets/common/mascot.dart';
+import '../packages/theme/app_themes.dart';
 
 /// Student profile capture after health monitoring consent.
 ///
@@ -623,6 +624,7 @@ class _ProfileCard extends StatelessWidget {
               'Tell me\nabout\nyourself!',
               textAlign: TextAlign.center,
               style: TextStyle(
+                fontFamily: AppThemes.fontFamily,
                 color: _headlineRed,
                 fontSize: headlineSize,
                 fontWeight: FontWeight.w900,
@@ -742,6 +744,7 @@ class _ProfileCard extends StatelessWidget {
                       child: Text(
                         'Tell me\nabout\nyourself!',
                         style: TextStyle(
+                          fontFamily: AppThemes.fontFamily,
                           color: _headlineRed,
                           fontSize: headlineSize,
                           fontWeight: FontWeight.w900,
@@ -843,6 +846,7 @@ class _ProfileForm extends StatelessWidget {
     final sexCircle = (w * 0.11).clamp(36.0, 54.0).toDouble();
 
     final labelStyle = TextStyle(
+      fontFamily: AppThemes.fontFamily,
       color: Colors.white,
       fontWeight: FontWeight.w800,
       letterSpacing: 0.7,
@@ -850,6 +854,7 @@ class _ProfileForm extends StatelessWidget {
       height: 1.1,
     );
     final inputStyle = TextStyle(
+      fontFamily: AppThemes.fontFamily,
       color: Colors.white,
       fontWeight: FontWeight.w700,
       fontSize: inputFontSize,
@@ -864,6 +869,7 @@ class _ProfileForm extends StatelessWidget {
         hintText: hint,
         hintMaxLines: 1,
         hintStyle: TextStyle(
+          fontFamily: AppThemes.fontFamily,
           color: Colors.white.withValues(alpha: 0.5),
           fontWeight: FontWeight.w600,
           fontSize: inputFontSize * 0.92,
