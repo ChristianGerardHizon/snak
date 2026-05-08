@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -581,25 +581,6 @@ class _CopyableQrCode extends StatefulWidget {
 }
 
 class _CopyableQrCodeState extends State<_CopyableQrCode> {
-  bool _justCopied = false;
-
-  Future<void> _copy() async {
-    final id = widget.reportId;
-    if (id == null) return;
-    await Clipboard.setData(ClipboardData(text: _reportUrl(id)));
-    if (!mounted) return;
-    setState(() => _justCopied = true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Report link copied to clipboard'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _justCopied = false);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final reportId = widget.reportId;
@@ -653,36 +634,7 @@ class _CopyableQrCodeState extends State<_CopyableQrCode> {
 
         return Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            MouseRegion(
-              cursor: enabled
-                  ? SystemMouseCursors.click
-                  : SystemMouseCursors.basic,
-              child: GestureDetector(
-                onTap: enabled ? _copy : null,
-                child: qr,
-              ),
-            ),
-            SizedBox(height: size * 0.04),
-            MouseRegion(
-              cursor: enabled
-                  ? SystemMouseCursors.click
-                  : SystemMouseCursors.basic,
-              child: GestureDetector(
-                onTap: enabled ? _copy : null,
-                child: Text(
-                  _justCopied ? 'Copied!' : 'Copy to clipboard',
-                  style: TextStyle(
-                    fontFamily: AppThemes.fontFamily,
-                    color: const Color(0xFF2C4A8C),
-                    fontSize: labelFontSize,
-                    fontWeight: FontWeight.w700,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ),
-          ],
+          children: [qr],
         );
       },
     );
@@ -909,8 +861,8 @@ class _ColorLegend extends StatelessWidget {
             ),
             SizedBox(height: fontSize * 0.2),
             row(const Color(0xFF22C55E), 'Healthy'),
-            row(const Color(0xFFE6B800), 'Improve'),
-            row(const Color(0xFFE53935), 'Needs attention'),
+            row(const Color(0xFFE6B800), 'Underweight'),
+            row(const Color(0xFFE53935), 'Overweight'),
           ],
         ),
       ),

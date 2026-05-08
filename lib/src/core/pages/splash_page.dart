@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
+import '../utils/web_fullscreen.dart';
 import 'measurement_result_page.dart';
 import 'report_data_overrides.dart';
 
@@ -175,19 +179,25 @@ class SplashPage extends HookWidget {
                 ),
               ),
             ),
-            // Barely visible top-right button to set report-data overrides.
-            // Last in the Stack so it always paints on top of the splash UI.
+            // Barely visible top-right buttons: fullscreen toggle + cog.
+            // Last in the Stack so they always paint on top of the splash UI.
             Positioned(
               top: 0,
               right: 0,
               child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(6),
-                  child: IconButton(
-                    tooltip: 'Set report data',
-                    icon: const Icon(Icons.settings, size: 24),
-                    color: Colors.white,
-                    onPressed: () => _showOverrideDialog(context),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _FullscreenToggleButton(),
+                      IconButton(
+                        tooltip: 'Set report data',
+                        icon: const Icon(Icons.settings, size: 24),
+                        color: Colors.white,
+                        onPressed: () => _showOverrideDialog(context),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -584,6 +594,40 @@ class _PausableGifState extends State<_PausableGif> {
           child: RawImage(image: frame, fit: widget.fit),
         ),
       ),
+    );
+  }
+}
+
+class _FullscreenToggleButton extends HookWidget {
+  @override
+  Widget build(BuildContext context) {
+    final isFullscreen = useState(false);
+
+    Future<void> toggle() async {
+      final next = !isFullscreen.value;
+
+      if (kIsWeb) {
+        await setWebFullscreen(next);
+      } else if (Platform.isAndroid || Platform.isIOS) {
+        await SystemChrome.setEnabledSystemUIMode(
+          next ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
+        );
+      } else {
+        await windowManager.setFullScreen(next);
+      }
+
+      isFullscreen.value = next;
+    }
+
+    return IconButton(
+      tooltip:
+          isFullscreen.value ? 'Exit fullscreen' : 'Open fullscreen',
+      icon: Icon(
+        isFullscreen.value ? Icons.fullscreen_exit : Icons.fullscreen,
+        size: 24,
+      ),
+      color: Colors.white,
+      onPressed: toggle,
     );
   }
 }
