@@ -64,11 +64,22 @@ class InformationConfirmationPage extends StatelessWidget {
                   final cardW =
                       (maxW * 0.94).clamp(320.0, 1100.0).toDouble();
                   final cardH = isPortrait
-                      ? (maxH * 0.92).clamp(560.0, 1100.0).toDouble()
-                      : (maxH * 0.86).clamp(420.0, 720.0).toDouble();
+                      ? (maxH * 0.78).clamp(480.0, 900.0).toDouble()
+                      : (maxH * 0.74).clamp(360.0, 620.0).toDouble();
 
-                  final logoW = (maxW * 0.12).clamp(72.0, 160.0).toDouble();
+                  final logoW = isPortrait
+                      ? (maxW * 0.32).clamp(120.0, 240.0).toDouble()
+                      : (maxW * 0.12).clamp(72.0, 160.0).toDouble();
                   final logoH = logoW / SnakLogoRaster.aspect;
+
+                  final logo = SizedBox(
+                    width: logoW,
+                    height: logoH,
+                    child: Assets.images.snakLogo.image(
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
+                    ),
+                  );
 
                   return Padding(
                     padding: EdgeInsets.symmetric(
@@ -77,6 +88,10 @@ class InformationConfirmationPage extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
+                        if (isPortrait) ...[
+                          logo,
+                          SizedBox(height: maxH * 0.01),
+                        ],
                         Expanded(
                           child: Center(
                             child: _ConfirmationCard(
@@ -97,15 +112,10 @@ class InformationConfirmationPage extends StatelessWidget {
                             ),
                           ),
                         ),
-                        SizedBox(height: maxH * 0.01),
-                        SizedBox(
-                          width: logoW,
-                          height: logoH,
-                          child: Assets.images.snakLogo.image(
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.high,
-                          ),
-                        ),
+                        if (!isPortrait) ...[
+                          SizedBox(height: maxH * 0.01),
+                          logo,
+                        ],
                       ],
                     ),
                   );
@@ -167,9 +177,9 @@ class _ConfirmationCard extends StatelessWidget {
         (cardWidth * 0.38).clamp(220.0, 420.0).toDouble();
     final backW = (cardWidth * 0.18).clamp(120.0, 220.0).toDouble();
 
-    final headlineSize = (cardWidth * 0.04).clamp(22.0, 40.0).toDouble();
-    final labelSize = (cardWidth * 0.022).clamp(14.0, 24.0).toDouble();
-    final valueSize = (cardWidth * 0.028).clamp(16.0, 30.0).toDouble();
+    final headlineSize = (cardWidth * 0.055).clamp(28.0, 56.0).toDouble();
+    final labelSize = (cardWidth * 0.032).clamp(18.0, 36.0).toDouble();
+    final valueSize = (cardWidth * 0.04).clamp(22.0, 44.0).toDouble();
 
     final labelStyle = TextStyle(
       fontFamily: AppThemes.fontFamily,
@@ -214,9 +224,9 @@ class _ConfirmationCard extends StatelessWidget {
           ),
           Positioned(
             left: cardWidth * 0.04,
-            top: cardHeight * 0.05,
-            right: mascotColumnW + cardWidth * 0.06,
-            bottom: pillH + cardHeight * 0.1,
+            top: cardHeight * 0.04,
+            right: mascotColumnW + cardWidth * 0.04,
+            bottom: pillH + cardHeight * 0.08,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -243,35 +253,35 @@ class _ConfirmationCard extends StatelessWidget {
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: cardHeight * 0.025),
+                        SizedBox(height: cardHeight * 0.03),
                         _InfoLine(
                           label: 'NAME:',
                           value: name,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: cardHeight * 0.025),
+                        SizedBox(height: cardHeight * 0.03),
                         _InfoLine(
                           label: 'AGE:',
                           value: age,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: cardHeight * 0.025),
+                        SizedBox(height: cardHeight * 0.03),
                         _InfoLine(
                           label: 'GENDER:',
                           value: sex,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: cardHeight * 0.025),
+                        SizedBox(height: cardHeight * 0.03),
                         _InfoLine(
                           label: 'GRADE:',
                           value: grade,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: cardHeight * 0.025),
+                        SizedBox(height: cardHeight * 0.03),
                         _InfoLine(
                           label: 'SECTION:',
                           value: section,
@@ -298,7 +308,7 @@ class _ConfirmationCard extends StatelessWidget {
           ),
           Positioned(
             left: cardWidth * 0.04,
-            bottom: cardHeight * 0.05,
+            bottom: cardHeight * 0.04,
             child: Row(
               children: [
                 SnakPillButton(
@@ -327,10 +337,10 @@ class _ConfirmationCard extends StatelessWidget {
   Widget _buildPortrait(BuildContext context) {
     final pad = cardWidth * 0.05;
     final pillH = 60.0;
-    final headlineSize = (cardWidth * 0.07).clamp(24.0, 36.0).toDouble();
-    final labelSize = (cardWidth * 0.04).clamp(14.0, 20.0).toDouble();
-    final valueSize = (cardWidth * 0.05).clamp(18.0, 26.0).toDouble();
-    final mascotH = (cardWidth * 0.34).clamp(120.0, 200.0).toDouble();
+    final headlineSize = (cardWidth * 0.075).clamp(28.0, 44.0).toDouble();
+    final labelSize = (cardWidth * 0.055).clamp(20.0, 32.0).toDouble();
+    final valueSize = (cardWidth * 0.07).clamp(26.0, 42.0).toDouble();
+    final mascotH = (cardWidth * 0.32).clamp(120.0, 200.0).toDouble();
     final mascotW = mascotH * Mascot.aspect;
 
     final labelStyle = TextStyle(
@@ -374,22 +384,27 @@ class _ConfirmationCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(pad, pad * 1.2, pad, pad * 0.6),
+            padding: EdgeInsets.fromLTRB(pad, pad * 0.9, pad, pad * 0.5),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'IS THIS CORRECT?',
-                  style: TextStyle(
-                    fontFamily: AppThemes.fontFamily,
-                    color: headlineColor,
-                    fontSize: headlineSize,
-                    fontWeight: FontWeight.w900,
-                    height: 1.05,
-                    letterSpacing: 0.3,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'IS THIS CORRECT?',
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontFamily: AppThemes.fontFamily,
+                      color: headlineColor,
+                      fontSize: headlineSize,
+                      fontWeight: FontWeight.w900,
+                      height: 1.05,
+                      letterSpacing: 0.3,
+                    ),
                   ),
                 ),
-                SizedBox(height: pad * 0.8),
+                SizedBox(height: pad * 0.4),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -401,53 +416,47 @@ class _ConfirmationCard extends StatelessWidget {
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: pad * 0.5),
+                        SizedBox(height: pad * 0.25),
                         _InfoLine(
                           label: 'NAME:',
                           value: name,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: pad * 0.5),
+                        SizedBox(height: pad * 0.25),
                         _InfoLine(
                           label: 'AGE:',
                           value: age,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: pad * 0.5),
+                        SizedBox(height: pad * 0.25),
                         _InfoLine(
                           label: 'GENDER:',
                           value: sex,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: pad * 0.5),
+                        SizedBox(height: pad * 0.25),
                         _InfoLine(
                           label: 'GRADE:',
                           value: grade,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: pad * 0.5),
+                        SizedBox(height: pad * 0.25),
                         _InfoLine(
                           label: 'SECTION:',
                           value: section,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: pad * 0.6),
-                        Center(
-                          child: Mascot.sitting(
-                            width: mascotW,
-                            height: mascotH,
-                          ),
-                        ),
+                        SizedBox(height: mascotH + pad * 0.4),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: pad * 0.4),
+                SizedBox(height: pad * 0.3),
                 Row(
                   children: [
                     Expanded(
@@ -475,6 +484,13 @@ class _ConfirmationCard extends StatelessWidget {
                 ),
                 SizedBox(height: pad * 0.2),
               ],
+            ),
+          ),
+          Positioned(
+            right: pad * 0.4,
+            bottom: pillH + pad * 0.6,
+            child: IgnorePointer(
+              child: Mascot.sitting(width: mascotW, height: mascotH),
             ),
           ),
         ],
