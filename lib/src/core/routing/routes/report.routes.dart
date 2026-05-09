@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../pages/report_viewer_page.dart';
+import '../router_utils.dart';
 
 part 'report.routes.g.dart';
 
@@ -14,7 +15,6 @@ class ReportRoute extends GoRouteData with $ReportRoute {
   final String id;
 
   @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return ReportViewerPage(reportId: id);
-  }
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      RouterUtils.fadePage(state, ReportViewerPage(reportId: id));
 }

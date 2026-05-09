@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../features/health/data/health_records_repository.dart';
 import '../../features/health/data/health_reports_repository.dart';
 import '../../features/students/data/students_repository.dart';
 import '../../features/students/models/student.dart';
+import '../assets/assets.gen.dart';
 import 'measurement_result_page.dart';
 
 /// Renders the health-findings report for a given report id.
@@ -12,7 +14,7 @@ import 'measurement_result_page.dart';
 /// Used when a user enters a report code or scans a report QR from
 /// [SplashPage]. Looks up the [HealthReport] and reuses
 /// [MeasurementResultPage] to render it.
-class ReportViewerPage extends ConsumerWidget {
+class ReportViewerPage extends HookConsumerWidget {
   const ReportViewerPage({super.key, required this.reportId});
 
   final String reportId;
@@ -21,8 +23,20 @@ class ReportViewerPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(healthReportByIdProvider(reportId));
 
+    // Warm the static background ahead of the result page so the deep-link
+    // hand-off doesn't flash black while the asset decodes.
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          precacheImage(Assets.images.background.provider(), context);
+        }
+      });
+      return null;
+    }, const []);
+
     return reportAsync.when(
       loading: () => const Scaffold(
+        backgroundColor: Color(0xFFBDD5ED),
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => _ErrorScaffold(

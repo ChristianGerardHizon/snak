@@ -11,6 +11,7 @@ import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
 import '../widgets/common/snak_pill_button.dart';
+import '../widgets/looping_video_background.dart';
 import 'measurement_result_page.dart';
 import '../packages/theme/app_themes.dart';
 
@@ -68,10 +69,10 @@ class ResultsGatewayPage extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image(
-              image: Assets.images.background.provider(),
+            const LoopingVideoBackground(
+              assetPath: 'assets/videos/background_animated.mp4',
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.medium,
+              zoom: 1.25,
             ),
             SafeArea(
               child: LayoutBuilder(
@@ -775,9 +776,12 @@ class _PhoneMock extends StatelessWidget {
                           size: phoneW * 0.28,
                         ),
                       ),
+                      SizedBox(height: phoneW * 0.06),
+                      SizedBox(
+                        width: double.infinity,
+                        child: _ColorLegend(fontSize: phoneW * 0.055),
+                      ),
                       const Spacer(),
-                      _ColorLegend(fontSize: phoneW * 0.045),
-                      SizedBox(height: phoneW * 0.05),
                       SizedBox(
                         width: double.infinity,
                         height: phoneW * 0.16,
@@ -809,19 +813,18 @@ class _ColorLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget row(Color dot, String label) => Padding(
-          padding: EdgeInsets.symmetric(vertical: fontSize * 0.1),
+          padding: EdgeInsets.symmetric(vertical: fontSize * 0.15),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: fontSize * 0.7,
-                height: fontSize * 0.7,
+                width: fontSize * 0.8,
+                height: fontSize * 0.8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: dot,
                 ),
               ),
-              SizedBox(width: fontSize * 0.4),
+              SizedBox(width: fontSize * 0.5),
               Text(
                 label,
                 style: TextStyle(
@@ -848,18 +851,19 @@ class _ColorLegend extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Color-coded\nresult:',
+              'Color-coded result:',
               style: TextStyle(
                 fontFamily: AppThemes.fontFamily,
                 color: const Color(0xFF5A3A1F),
                 fontWeight: FontWeight.w900,
-                fontSize: fontSize * 0.95,
+                fontSize: fontSize,
                 height: 1.05,
               ),
             ),
-            SizedBox(height: fontSize * 0.2),
+            SizedBox(height: fontSize * 0.3),
             row(const Color(0xFF22C55E), 'Healthy'),
             row(const Color(0xFFE6B800), 'Underweight'),
             row(const Color(0xFFE53935), 'Overweight'),

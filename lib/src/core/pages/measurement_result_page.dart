@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/snak_pill_button.dart';
+import '../widgets/looping_video_background.dart';
 import '../packages/theme/app_themes.dart';
 
 /// BMI-style result for [MeasurementResultPage] (Health Findings).
@@ -62,10 +63,10 @@ class MeasurementResultPage extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image(
-              image: Assets.images.background.provider(),
+            const LoopingVideoBackground(
+              assetPath: 'assets/videos/background_animated.mp4',
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.medium,
+              zoom: 1.25,
             ),
             SafeArea(
               child: LayoutBuilder(
@@ -73,10 +74,16 @@ class MeasurementResultPage extends StatelessWidget {
                   final maxW = constraints.maxWidth;
                   final maxH = constraints.maxHeight;
 
-                  final cardW =
-                      (maxW * 0.7).clamp(360.0, 720.0).toDouble();
+                  // On wider landscape viewports (iPad 10 landscape ≈
+                  // 1180×~760 safe) widen the card so the report content fits
+                  // without scrolling, and let the height clamp follow the
+                  // viewport instead of capping at 880.
+                  final isWideLandscape = maxW > maxH * 1.2;
+                  final cardW = isWideLandscape
+                      ? (maxW * 0.62).clamp(360.0, 880.0).toDouble()
+                      : (maxW * 0.7).clamp(360.0, 720.0).toDouble();
                   final cardH =
-                      (maxH * 0.94).clamp(520.0, 880.0).toDouble();
+                      (maxH * 0.96).clamp(520.0, 1040.0).toDouble();
 
                   return Padding(
                     padding: EdgeInsets.symmetric(
@@ -150,7 +157,7 @@ class _ResultCard extends StatelessWidget {
 
     final labelSize = (width * 0.028).clamp(13.0, 22.0).toDouble();
     final valueSize = (width * 0.032).clamp(14.0, 24.0).toDouble();
-    final headerSize = (width * 0.04).clamp(18.0, 30.0).toDouble();
+    final headerSize = (width * 0.05).clamp(22.0, 38.0).toDouble();
     final measureSize = (width * 0.046).clamp(20.0, 36.0).toDouble();
     final footerSize = (width * 0.05).clamp(20.0, 38.0).toDouble();
 
@@ -191,10 +198,16 @@ class _ResultCard extends StatelessWidget {
         ),
         child: Padding(
           padding: EdgeInsets.fromLTRB(pad * 1.2, pad, pad * 1.2, pad * 0.6),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+          child: LayoutBuilder(
+            builder: (context, c) => FittedBox(
+              fit: BoxFit.contain,
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: c.maxWidth,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                 Center(
                   child: SizedBox(
                     width: logoW,
@@ -281,6 +294,8 @@ class _ResultCard extends StatelessWidget {
                 SizedBox(height: pad * 0.6),
               ],
             ),
+              ),
+            ),
           ),
         ),
       ),
@@ -301,7 +316,7 @@ class _BmiBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final faceSize = headerSize * 2.4;
+    final faceSize = headerSize * 3.0;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: spec.bannerBg,
@@ -310,8 +325,8 @@ class _BmiBanner extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: headerSize * 0.7,
-          vertical: headerSize * 0.5,
+          horizontal: headerSize * 0.8,
+          vertical: headerSize * 0.7,
         ),
         child: Row(
           children: [
@@ -338,11 +353,11 @@ class _BmiBanner extends StatelessWidget {
                       fontFamily: AppThemes.fontFamily,
                       color: MeasurementResultPage._ink,
                       fontWeight: FontWeight.w900,
-                      fontSize: headerSize * 0.72,
+                      fontSize: headerSize * 0.95,
                       letterSpacing: 0.3,
                     ),
                   ),
-                  SizedBox(height: headerSize * 0.15),
+                  SizedBox(height: headerSize * 0.2),
                   Text(
                     spec.categoryTitle,
                     textAlign: TextAlign.center,
@@ -350,7 +365,7 @@ class _BmiBanner extends StatelessWidget {
                       fontFamily: AppThemes.fontFamily,
                       color: MeasurementResultPage._ink,
                       fontWeight: FontWeight.w900,
-                      fontSize: headerSize * 1.15,
+                      fontSize: headerSize * 1.55,
                       letterSpacing: 0.6,
                       height: 1.05,
                     ),
