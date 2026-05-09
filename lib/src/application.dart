@@ -37,6 +37,7 @@ class Application extends HookConsumerWidget {
     final showHealthConsent = useState(false);
     final showHealthJoin = useState(false);
     final showProfileSetup = useState(false);
+    final profileSession = useState(0);
 
     final showSplash = isInitializing || !continueAfterLanding.value;
 
@@ -81,6 +82,7 @@ class Application extends HookConsumerWidget {
                         showConsent: showHealthConsent.value,
                         showJoin: showHealthJoin.value,
                         showProfileSetup: showProfileSetup.value,
+                        profileSession: profileSession.value,
                         onSplashContinue: () {
                           showHealthConsent.value = true;
                         },
@@ -112,6 +114,7 @@ class Application extends HookConsumerWidget {
                           showHealthJoin.value = false;
                           showHealthConsent.value = false;
                           continueAfterLanding.value = false;
+                          profileSession.value += 1;
                         },
                       ),
                     )

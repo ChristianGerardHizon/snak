@@ -95,30 +95,6 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
     };
   }
 
-  /// Return to the profile form so another student can be entered.
-  void _restartForNextStudent() {
-    setState(() {
-      _studentIdController.clear();
-      _nameController.clear();
-      _ageController.clear();
-      _sectionController.clear();
-      _selectedGrade = null;
-      _sex = null;
-      _showConfirmation = false;
-      _showMeasurementInstruction = false;
-      _showStandStillWaiting = false;
-      _showCheckingResult = false;
-      _showMeasurementResult = false;
-      _showResultsGateway = false;
-      _rolledMeasurementOutcome = null;
-      _rolledReportId = null;
-      _rolledHeightCm = null;
-      _rolledWeightKg = null;
-      _rolledVisitDate = null;
-      _persisting = false;
-    });
-  }
-
   StudentSex? _mapSex(_ProfileSex? s) => switch (s) {
         _ProfileSex.boy => StudentSex.male,
         _ProfileSex.girl => StudentSex.female,
@@ -401,10 +377,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
         weightKg: _rolledWeightKg,
         bmi: bmi,
         visitDate: _rolledVisitDate,
-        onDone: () {
-          _restartForNextStudent();
-          widget.onReturnToStart();
-        },
+        onDone: widget.onReturnToStart,
       );
     }
 
