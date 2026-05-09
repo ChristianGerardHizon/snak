@@ -13,6 +13,11 @@ import '../widgets/looping_video_background.dart';
 import 'measurement_result_page.dart';
 import 'report_data_overrides.dart';
 
+/// True once [SplashPage] has been shown at least once this session. Used to
+/// skip the first-launch intro delay when the user returns to the splash
+/// (e.g. after finishing a measurement) so the screen isn't blank for 3s.
+bool _splashHasBeenShown = false;
+
 class SplashPage extends HookWidget {
   const SplashPage({
     super.key,
@@ -45,14 +50,23 @@ class SplashPage extends HookWidget {
       logoWidth / SnakLogoRaster.aspect,
     );
 
-    // The logo and START button fade in shortly after mount so they don't
-    // pop in on top of the background video.
-    const introDelay = Duration(milliseconds: 3000);
+    // The logo and START button fade in shortly after mount. On first launch
+    // we wait a beat for the background video to settle; on subsequent visits
+    // (e.g. returning from results) the entrance plays immediately so the
+    // user isn't staring at an empty/black screen.
+    final introDelay = _splashHasBeenShown
+        ? Duration.zero
+        : const Duration(milliseconds: 3000);
 
     final entranceController = useAnimationController(
       duration: const Duration(milliseconds: 1100),
     );
     useEffect(() {
+      _splashHasBeenShown = true;
+      if (introDelay == Duration.zero) {
+        entranceController.forward();
+        return null;
+      }
       final timer = Future.delayed(introDelay, () {
         if (entranceController.isDismissed) {
           entranceController.forward();
@@ -86,6 +100,7 @@ class SplashPage extends HookWidget {
     )..repeat(reverse: true);
 
     return Scaffold(
+      backgroundColor: _startRed,
       body: Material(
         type: MaterialType.transparency,
         child: Stack(
