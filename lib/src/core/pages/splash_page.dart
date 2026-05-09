@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'dart:io' show Platform;
-import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -11,6 +9,7 @@ import 'package:window_manager/window_manager.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../utils/web_fullscreen.dart';
+import '../widgets/looping_video_background.dart';
 import 'measurement_result_page.dart';
 import 'report_data_overrides.dart';
 
@@ -46,28 +45,20 @@ class SplashPage extends HookWidget {
       logoWidth / SnakLogoRaster.aspect,
     );
 
-    // Approximate playback time of the intro GIF. The logo and START button
-    // fade in once this elapses so the handoff feels seamless.
-    const gifDuration = Duration(milliseconds: 3000);
+    // The logo and START button fade in shortly after mount so they don't
+    // pop in on top of the background video.
+    const introDelay = Duration(milliseconds: 3000);
 
     final entranceController = useAnimationController(
       duration: const Duration(milliseconds: 1100),
     );
-    final pauseGif = useState(false);
     useEffect(() {
-      final timer = Future.delayed(gifDuration, () {
+      final timer = Future.delayed(introDelay, () {
         if (entranceController.isDismissed) {
           entranceController.forward();
         }
       });
-      void onStatus(AnimationStatus s) {
-        if (s == AnimationStatus.completed) pauseGif.value = true;
-      }
-      entranceController.addStatusListener(onStatus);
-      return () {
-        timer.ignore();
-        entranceController.removeStatusListener(onStatus);
-      };
+      return timer.ignore;
     }, const []);
 
     // Warm the static background used by the screens after splash so the
@@ -100,10 +91,10 @@ class SplashPage extends HookWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            _PausableGif(
-              assetPath: 'assets/videos/background_video.gif',
-              paused: pauseGif.value,
+            const LoopingVideoBackground(
+              assetPath: 'assets/videos/background_animated.mp4',
               fit: BoxFit.cover,
+              zoom: 1.25,
             ),
             // Soft scrim for legibility behind the logo & button.
             const DecoratedBox(
@@ -500,102 +491,6 @@ class _ReportOverrideDialog extends HookWidget {
         MeasurementResultOutcome.normal => 'Normal',
         MeasurementResultOutcome.overweight => 'Overweight',
       };
-}
-
-/// Plays an animated GIF asset frame-by-frame and freezes on the current
-/// frame when [paused] flips to true.
-class _PausableGif extends StatefulWidget {
-  const _PausableGif({
-    required this.assetPath,
-    required this.paused,
-    this.fit = BoxFit.cover,
-  });
-
-  final String assetPath;
-  final bool paused;
-  final BoxFit fit;
-
-  @override
-  State<_PausableGif> createState() => _PausableGifState();
-}
-
-class _PausableGifState extends State<_PausableGif> {
-  ui.Codec? _codec;
-  ui.Image? _frame;
-  Timer? _timer;
-  bool _disposed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final data = await rootBundle.load(widget.assetPath);
-    final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
-    if (_disposed) {
-      codec.dispose();
-      return;
-    }
-    _codec = codec;
-    _scheduleNextFrame();
-  }
-
-  Future<void> _scheduleNextFrame() async {
-    final codec = _codec;
-    if (codec == null || _disposed) return;
-    if (widget.paused) return;
-    final frame = await codec.getNextFrame();
-    if (_disposed) {
-      frame.image.dispose();
-      return;
-    }
-    _frame?.dispose();
-    _frame = frame.image;
-    if (mounted) setState(() {});
-    if (widget.paused) return;
-    _timer = Timer(frame.duration, _scheduleNextFrame);
-  }
-
-  @override
-  void didUpdateWidget(covariant _PausableGif oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!oldWidget.paused && widget.paused) {
-      _timer?.cancel();
-      _timer = null;
-    } else if (oldWidget.paused && !widget.paused) {
-      _scheduleNextFrame();
-    }
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    _timer?.cancel();
-    _frame?.dispose();
-    _codec?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final frame = _frame;
-    if (frame == null) {
-      return const SizedBox.expand();
-    }
-    return SizedBox.expand(
-      child: FittedBox(
-        fit: widget.fit,
-        clipBehavior: Clip.hardEdge,
-        child: SizedBox(
-          width: frame.width.toDouble(),
-          height: frame.height.toDouble(),
-          child: RawImage(image: frame, fit: widget.fit),
-        ),
-      ),
-    );
-  }
 }
 
 class _FullscreenToggleButton extends HookWidget {

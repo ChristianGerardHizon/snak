@@ -11,6 +11,8 @@ enum MascotPose {
   sitting,
   sleeping,
   bitten,
+  running,
+  standing,
 }
 
 /// Displays a single mascot pose image.
@@ -45,6 +47,12 @@ class Mascot extends StatelessWidget {
   const Mascot.bitten({super.key, this.width, this.height})
       : pose = MascotPose.bitten;
 
+  const Mascot.running({super.key, this.width, this.height})
+      : pose = MascotPose.running;
+
+  const Mascot.standing({super.key, this.width, this.height})
+      : pose = MascotPose.standing;
+
   /// Native pixel size of each mascot PNG (square).
   static const double nativeSize = 768;
 
@@ -71,6 +79,10 @@ class Mascot extends StatelessWidget {
         return Assets.images.mascot.mascotSleeping;
       case MascotPose.bitten:
         return Assets.images.mascot.mascotBitten;
+      case MascotPose.running:
+        return Assets.images.mascot.runningMascot;
+      case MascotPose.standing:
+        return Assets.images.mascot.standingMascot;
     }
   }
 
