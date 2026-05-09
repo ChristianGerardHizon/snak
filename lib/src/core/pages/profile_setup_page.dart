@@ -703,7 +703,7 @@ class _ProfileCard extends StatelessWidget {
             child: FittedBox(
               fit: BoxFit.contain,
               alignment: Alignment.bottomRight,
-              child: Mascot.winking(width: mascotW, height: mascotH),
+              child: Mascot.wave(width: mascotW, height: mascotH),
             ),
           ),
           Positioned(
@@ -792,7 +792,7 @@ class _ProfileCard extends StatelessWidget {
                     SizedBox(
                       width: mascotW,
                       height: mascotH,
-                      child: Mascot.winking(width: mascotW, height: mascotH),
+                      child: Mascot.wave(width: mascotW, height: mascotH),
                     ),
                     SizedBox(width: pad * 0.6),
                     Expanded(

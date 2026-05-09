@@ -11,92 +11,16 @@
 
 import 'package:flutter/widgets.dart';
 
-class $AssetsIconsGen {
-  const $AssetsIconsGen();
-
-  /// File path: assets/icons/app_icon.png
-  AssetGenImage get appIcon => const AssetGenImage('assets/icons/app_icon.png');
-
-  /// File path: assets/icons/app_icon_dev.png
-  AssetGenImage get appIconDev =>
-      const AssetGenImage('assets/icons/app_icon_dev.png');
-
-  /// File path: assets/icons/app_icon_mac.png
-  AssetGenImage get appIconMac =>
-      const AssetGenImage('assets/icons/app_icon_mac.png');
-
-  /// File path: assets/icons/app_icon_stg.png
-  AssetGenImage get appIconStg =>
-      const AssetGenImage('assets/icons/app_icon_stg.png');
-
-  /// File path: assets/icons/app_icon_transparent.png
-  AssetGenImage get appIconTransparent =>
-      const AssetGenImage('assets/icons/app_icon_transparent.png');
-
-  /// File path: assets/icons/app_icon_transparent_dev.png
-  AssetGenImage get appIconTransparentDev =>
-      const AssetGenImage('assets/icons/app_icon_transparent_dev.png');
-
-  /// File path: assets/icons/app_icon_transparent_stg.png
-  AssetGenImage get appIconTransparentStg =>
-      const AssetGenImage('assets/icons/app_icon_transparent_stg.png');
-
-  /// File path: assets/icons/snak_logo_banner.png
-  AssetGenImage get snakLogoBanner =>
-      const AssetGenImage('assets/icons/snak_logo_banner.png');
-
-  /// File path: assets/icons/snak_logo_small.png
-  AssetGenImage get snakLogoSmall =>
-      const AssetGenImage('assets/icons/snak_logo_small.png');
-
-  /// File path: assets/icons/snak_logo_small_transparent.png
-  AssetGenImage get snakLogoSmallTransparent =>
-      const AssetGenImage('assets/icons/snak_logo_small_transparent.png');
-
-  /// File path: assets/icons/snak_logo_square.png
-  AssetGenImage get snakLogoSquare =>
-      const AssetGenImage('assets/icons/snak_logo_square.png');
-
-  /// File path: assets/icons/snak_logo_square_transparent.png
-  AssetGenImage get snakLogoSquareTransparent =>
-      const AssetGenImage('assets/icons/snak_logo_square_transparent.png');
-
-  /// File path: assets/icons/snak_logo_white.png
-  AssetGenImage get snakLogoWhite =>
-      const AssetGenImage('assets/icons/snak_logo_white.png');
-
-  /// File path: assets/icons/snak_logo_wide.png
-  AssetGenImage get snakLogoWide =>
-      const AssetGenImage('assets/icons/snak_logo_wide.png');
-
-  /// List of all assets
-  List<AssetGenImage> get values => [
-        appIcon,
-        appIconDev,
-        appIconMac,
-        appIconStg,
-        appIconTransparent,
-        appIconTransparentDev,
-        appIconTransparentStg,
-        snakLogoBanner,
-        snakLogoSmall,
-        snakLogoSmallTransparent,
-        snakLogoSquare,
-        snakLogoSquareTransparent,
-        snakLogoWhite,
-        snakLogoWide
-      ];
-}
-
 class $AssetsImagesGen {
   const $AssetsImagesGen();
+
+  /// Directory path: assets/images/animated_mascots
+  $AssetsImagesAnimatedMascotsGen get animatedMascots =>
+      const $AssetsImagesAnimatedMascotsGen();
 
   /// File path: assets/images/background.png
   AssetGenImage get background =>
       const AssetGenImage('assets/images/background.png');
-
-  /// Directory path: assets/images/mascot
-  $AssetsImagesMascotGen get mascot => const $AssetsImagesMascotGen();
 
   /// File path: assets/images/snak_logo.png
   AssetGenImage get snakLogo =>
@@ -116,68 +40,57 @@ class $AssetsVideosGen {
   List<String> get values => [backgroundAnimated];
 }
 
-class $AssetsImagesMascotGen {
-  const $AssetsImagesMascotGen();
+class $AssetsImagesAnimatedMascotsGen {
+  const $AssetsImagesAnimatedMascotsGen();
 
-  /// File path: assets/images/mascot/arms_out_mascot.gif
-  AssetGenImage get armsOutMascot =>
-      const AssetGenImage('assets/images/mascot/arms_out_mascot.gif');
+  /// File path: assets/images/animated_mascots/1_apple_running_nobg.webp
+  AssetGenImage get a1AppleRunningNobg => const AssetGenImage(
+      'assets/images/animated_mascots/1_apple_running_nobg.webp');
 
-  /// File path: assets/images/mascot/mascot_bitten.png
-  AssetGenImage get mascotBitten =>
-      const AssetGenImage('assets/images/mascot/mascot_bitten.png');
+  /// File path: assets/images/animated_mascots/2_apple_arms_out_nobg.webp
+  AssetGenImage get a2AppleArmsOutNobg => const AssetGenImage(
+      'assets/images/animated_mascots/2_apple_arms_out_nobg.webp');
 
-  /// File path: assets/images/mascot/mascot_shy.png
-  AssetGenImage get mascotShy =>
-      const AssetGenImage('assets/images/mascot/mascot_shy.png');
+  /// File path: assets/images/animated_mascots/3_apple_waiting_nobg.webp
+  AssetGenImage get a3AppleWaitingNobg => const AssetGenImage(
+      'assets/images/animated_mascots/3_apple_waiting_nobg.webp');
 
-  /// File path: assets/images/mascot/mascot_sitting.png
-  AssetGenImage get mascotSitting =>
-      const AssetGenImage('assets/images/mascot/mascot_sitting.png');
+  /// File path: assets/images/animated_mascots/4_apple_thumbs_nobg.webp
+  AssetGenImage get a4AppleThumbsNobg => const AssetGenImage(
+      'assets/images/animated_mascots/4_apple_thumbs_nobg.webp');
 
-  /// File path: assets/images/mascot/mascot_sleeping.png
-  AssetGenImage get mascotSleeping =>
-      const AssetGenImage('assets/images/mascot/mascot_sleeping.png');
+  /// File path: assets/images/animated_mascots/5_apple_wave_nobg.webp
+  AssetGenImage get a5AppleWaveNobg => const AssetGenImage(
+      'assets/images/animated_mascots/5_apple_wave_nobg.webp');
 
-  /// File path: assets/images/mascot/mascot_thumbs_up.webp
-  AssetGenImage get mascotThumbsUp =>
-      const AssetGenImage('assets/images/mascot/mascot_thumbs_up.webp');
+  /// File path: assets/images/animated_mascots/6_apple_lay_nobg.webp
+  AssetGenImage get a6AppleLayNobg => const AssetGenImage(
+      'assets/images/animated_mascots/6_apple_lay_nobg.webp');
 
-  /// File path: assets/images/mascot/mascot_walking.png
-  AssetGenImage get mascotWalking =>
-      const AssetGenImage('assets/images/mascot/mascot_walking.png');
+  /// File path: assets/images/animated_mascots/7_apple_sit_nobg.webp
+  AssetGenImage get a7AppleSitNobg => const AssetGenImage(
+      'assets/images/animated_mascots/7_apple_sit_nobg.webp');
 
-  /// File path: assets/images/mascot/mascot_winking.png
-  AssetGenImage get mascotWinking =>
-      const AssetGenImage('assets/images/mascot/mascot_winking.png');
-
-  /// File path: assets/images/mascot/running_mascot.gif
-  AssetGenImage get runningMascot =>
-      const AssetGenImage('assets/images/mascot/running_mascot.gif');
-
-  /// File path: assets/images/mascot/standing_mascot.gif
-  AssetGenImage get standingMascot =>
-      const AssetGenImage('assets/images/mascot/standing_mascot.gif');
+  /// File path: assets/images/animated_mascots/8_apple_nod_nobg.webp
+  AssetGenImage get a8AppleNodNobg => const AssetGenImage(
+      'assets/images/animated_mascots/8_apple_nod_nobg.webp');
 
   /// List of all assets
   List<AssetGenImage> get values => [
-        armsOutMascot,
-        mascotBitten,
-        mascotShy,
-        mascotSitting,
-        mascotSleeping,
-        mascotThumbsUp,
-        mascotWalking,
-        mascotWinking,
-        runningMascot,
-        standingMascot
+        a1AppleRunningNobg,
+        a2AppleArmsOutNobg,
+        a3AppleWaitingNobg,
+        a4AppleThumbsNobg,
+        a5AppleWaveNobg,
+        a6AppleLayNobg,
+        a7AppleSitNobg,
+        a8AppleNodNobg
       ];
 }
 
 class Assets {
   const Assets._();
 
-  static const $AssetsIconsGen icons = $AssetsIconsGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
   static const $AssetsVideosGen videos = $AssetsVideosGen();
 }

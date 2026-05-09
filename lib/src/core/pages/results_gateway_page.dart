@@ -278,7 +278,7 @@ class _GatewayCard extends StatelessWidget {
                       ),
                       SizedBox(width: rightColW * 0.04),
                       Expanded(
-                        child: Mascot.sitting(
+                        child: Mascot.nod(
                           width: qrSide * 0.85,
                           height: qrSide * 0.85,
                         ),
@@ -374,7 +374,7 @@ class _GatewayCard extends StatelessWidget {
                   SizedBox(height: pad * 0.8),
                   _CopyableQrCode(size: qrSide, reportId: reportId),
                   SizedBox(height: pad * 0.6),
-                  Mascot.sitting(
+                  Mascot.nod(
                     width: qrSide * 0.55,
                     height: qrSide * 0.55,
                   ),
