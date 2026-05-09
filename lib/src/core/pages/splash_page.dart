@@ -9,7 +9,6 @@ import 'package:window_manager/window_manager.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../utils/web_fullscreen.dart';
-import '../widgets/looping_video_background.dart';
 import 'measurement_result_page.dart';
 import 'report_data_overrides.dart';
 
@@ -106,11 +105,6 @@ class SplashPage extends HookWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const LoopingVideoBackground(
-              assetPath: 'assets/videos/background_animated.mp4',
-              fit: BoxFit.cover,
-              zoom: 1.25,
-            ),
             // Soft scrim for legibility behind the logo & button.
             const DecoratedBox(
               decoration: BoxDecoration(

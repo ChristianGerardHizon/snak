@@ -1,39 +1,32 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../assets/assets.gen.dart';
 
-/// Refcounted, looping, muted [VideoPlayerController] keyed by asset path.
-/// While at least one [LoopingVideoBackground] is mounted, the controller is
-/// shared across pages. The release is deferred a frame so overlapping
-/// AnimatedSwitcher transitions (old widget unmounting while new widget is
-/// still acquiring) don't bounce the refcount through zero, which would
-/// dispose+recreate the controller and break the iOS texture handoff.
-class _RefcountedVideo {
-  _RefcountedVideo._(this.assetPath);
+/// Singleton, looping, muted [VideoPlayerController] keyed by asset path.
+/// One controller per asset for the lifetime of the process. The host
+/// [LoopingVideoBackground] widget is meant to be mounted exactly once (at
+/// the app shell, behind the page switcher) so the underlying texture is
+/// never handed off between widgets — which is what was previously breaking
+/// the iOS background video on page transitions.
+class _BackgroundVideo {
+  _BackgroundVideo._(this.assetPath);
 
   final String assetPath;
   VideoPlayerController? controller;
-  Future<void>? _initFuture;
-  int _refs = 0;
-  Timer? _pendingRelease;
+  Future<void>? initFuture;
 
-  static final Map<String, _RefcountedVideo> _instances = {};
+  static final Map<String, _BackgroundVideo> _instances = {};
 
-  static _RefcountedVideo acquireSync(String assetPath) {
+  static _BackgroundVideo of(String assetPath) {
     final entry = _instances.putIfAbsent(
       assetPath,
-      () => _RefcountedVideo._(assetPath),
+      () => _BackgroundVideo._(assetPath),
     );
-    entry._refs += 1;
-    entry._pendingRelease?.cancel();
-    entry._pendingRelease = null;
     if (entry.controller == null) {
       final created = VideoPlayerController.asset(assetPath);
       entry.controller = created;
-      entry._initFuture = () async {
+      entry.initFuture = () async {
         await created.initialize();
         await created.setLooping(true);
         await created.setVolume(0);
@@ -42,29 +35,14 @@ class _RefcountedVideo {
     }
     return entry;
   }
-
-  static void release(String assetPath) {
-    final entry = _instances[assetPath];
-    if (entry == null) return;
-    entry._refs -= 1;
-    if (entry._refs <= 0) {
-      // Defer the actual dispose so a near-immediate acquire (next page
-      // mounting during a transition) can reclaim the live controller.
-      entry._pendingRelease?.cancel();
-      entry._pendingRelease = Timer(const Duration(milliseconds: 250), () {
-        if (entry._refs > 0) return;
-        entry.controller?.dispose();
-        entry.controller = null;
-        entry._initFuture = null;
-        _instances.remove(assetPath);
-      });
-    }
-  }
 }
 
-/// Plays an mp4 asset on loop, muted, as a full-bleed background. Falls back
-/// to a static image while the video initializes so there's never an empty
-/// frame.
+/// Plays an mp4 asset on loop, muted, as a full-bleed background. Renders a
+/// static image fallback while the video initializes so there's never an
+/// empty frame.
+///
+/// Mount this exactly once at the app shell (behind the page switcher).
+/// Pages should be transparent overlays.
 class LoopingVideoBackground extends StatefulWidget {
   const LoopingVideoBackground({
     super.key,
@@ -84,26 +62,18 @@ class LoopingVideoBackground extends StatefulWidget {
 class _LoopingVideoBackgroundState extends State<LoopingVideoBackground>
     with WidgetsBindingObserver {
   VideoPlayerController? _controller;
-  bool _released = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Bump the refcount synchronously so a sibling widget unmounting in the
-    // same frame can't trigger a dispose before our async init runs.
-    final entry = _RefcountedVideo.acquireSync(widget.assetPath);
-    _attach(entry);
+    _attach();
   }
 
   @override
   void dispose() {
     _controller?.removeListener(_onTick);
     WidgetsBinding.instance.removeObserver(this);
-    if (!_released) {
-      _released = true;
-      _RefcountedVideo.release(widget.assetPath);
-    }
     super.dispose();
   }
 
@@ -119,11 +89,11 @@ class _LoopingVideoBackgroundState extends State<LoopingVideoBackground>
     }
   }
 
-  Future<void> _attach(_RefcountedVideo entry) async {
+  Future<void> _attach() async {
+    final entry = _BackgroundVideo.of(widget.assetPath);
     try {
-      await entry._initFuture;
+      await entry.initFuture;
     } catch (_) {
-      // Initialization failed; static fallback will render.
       return;
     }
     if (!mounted) return;

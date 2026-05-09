@@ -4,7 +4,6 @@ import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/snak_pill_button.dart';
 import '../widgets/common/mascot.dart';
-import '../widgets/looping_video_background.dart';
 import '../packages/theme/app_themes.dart';
 
 /// Shown after profile confirmation; reminds the student how to stand for measurement.
@@ -33,17 +32,13 @@ class MeasurementInstructionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: true,
       body: Material(
         type: MaterialType.transparency,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const LoopingVideoBackground(
-              assetPath: 'assets/videos/background_animated.mp4',
-              fit: BoxFit.cover,
-              zoom: 1.25,
-            ),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {

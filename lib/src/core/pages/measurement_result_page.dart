@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/snak_pill_button.dart';
-import '../widgets/looping_video_background.dart';
 import '../packages/theme/app_themes.dart';
 
 /// BMI-style result for [MeasurementResultPage] (Health Findings).
@@ -58,16 +57,12 @@ class MeasurementResultPage extends StatelessWidget {
     final displayBmi = bmi ?? spec.fallbackBmi;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Material(
         type: MaterialType.transparency,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const LoopingVideoBackground(
-              assetPath: 'assets/videos/background_animated.mp4',
-              fit: BoxFit.cover,
-              zoom: 1.25,
-            ),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {

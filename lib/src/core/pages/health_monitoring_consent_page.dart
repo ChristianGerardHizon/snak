@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
-import '../widgets/looping_video_background.dart';
 import '../widgets/rise_in_animation.dart';
 import '../packages/theme/app_themes.dart';
 
@@ -31,16 +30,12 @@ class HealthMonitoringConsentPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Material(
         type: MaterialType.transparency,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const LoopingVideoBackground(
-              assetPath: 'assets/videos/background_animated.mp4',
-              fit: BoxFit.cover,
-              zoom: 1.25,
-            ),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {

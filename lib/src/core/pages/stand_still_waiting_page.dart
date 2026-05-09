@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
-import '../widgets/looping_video_background.dart';
 import '../packages/theme/app_themes.dart';
 
 /// Shown after measurement instructions while the student is being measured.
@@ -76,13 +75,6 @@ class _StandStillWaitingPageState extends State<StandStillWaitingPage> {
             clipBehavior: Clip.none,
             fit: StackFit.expand,
             children: [
-              const Positioned.fill(
-                child: LoopingVideoBackground(
-                  assetPath: 'assets/videos/background_animated.mp4',
-                  fit: BoxFit.cover,
-                  zoom: 1.25,
-                ),
-              ),
               Positioned(
                 left: edgePad * 0.75,
                 top: edgePad * 0.6,

@@ -11,7 +11,6 @@ import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
 import '../widgets/common/snak_pill_button.dart';
-import '../widgets/looping_video_background.dart';
 import 'measurement_result_page.dart';
 import '../packages/theme/app_themes.dart';
 
@@ -64,16 +63,12 @@ class ResultsGatewayPage extends StatelessWidget {
     final spec = _summaryFor(outcome);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Material(
         type: MaterialType.transparency,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const LoopingVideoBackground(
-              assetPath: 'assets/videos/background_animated.mp4',
-              fit: BoxFit.cover,
-              zoom: 1.25,
-            ),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, c) {
