@@ -23,6 +23,7 @@ class AppInitializationPage extends StatelessWidget {
     required this.onProfileComplete,
     required this.onProfileBack,
     required this.onReturnToStart,
+    this.profileSession = 0,
     this.measurementResultOutcome = MeasurementResultOutcome.normal,
   });
 
@@ -30,6 +31,7 @@ class AppInitializationPage extends StatelessWidget {
   final bool showConsent;
   final bool showJoin;
   final bool showProfileSetup;
+  final int profileSession;
   final VoidCallback onSplashContinue;
   final VoidCallback onConsentContinue;
   final VoidCallback onConsentBack;
@@ -47,7 +49,7 @@ class AppInitializationPage extends StatelessWidget {
     final Widget current;
     if (showProfileSetup) {
       current = ProfileSetupPage(
-        key: const ValueKey('profile'),
+        key: ValueKey('profile-$profileSession'),
         onComplete: onProfileComplete,
         onBack: onProfileBack,
         onReturnToStart: onReturnToStart,
