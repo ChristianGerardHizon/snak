@@ -90,7 +90,7 @@ class _StandStillWaitingPageState extends State<StandStillWaitingPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Mascot.standing(
+                    Mascot.lay(
                       width: spriteW,
                       height: spriteH,
                     ),

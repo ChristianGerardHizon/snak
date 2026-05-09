@@ -107,7 +107,7 @@ class MeasurementInstructionPage extends StatelessWidget {
                                           CrossAxisAlignment.stretch,
                                       children: [
                                         Center(
-                                          child: Mascot.thumbsUp(
+                                          child: Mascot.thumbs(
                                             width: mascotW,
                                             height: mascotH,
                                           ),
@@ -240,7 +240,7 @@ class MeasurementInstructionPage extends StatelessWidget {
                                           child: FittedBox(
                                             fit: BoxFit.contain,
                                             alignment: Alignment.bottomCenter,
-                                            child: Mascot.thumbsUp(
+                                            child: Mascot.thumbs(
                                               width: mascotW,
                                               height: mascotH,
                                             ),

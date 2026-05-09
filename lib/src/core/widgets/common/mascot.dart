@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
 
-import '../../assets/assets.gen.dart';
-
 /// Available mascot poses.
 enum MascotPose {
-  thumbsUp,
-  shy,
-  winking,
-  walking,
-  sitting,
-  sleeping,
-  bitten,
   running,
-  standing,
+  armsOut,
+  waiting,
+  thumbs,
+  wave,
+  lay,
+  sit,
+  nod,
 }
 
 /// Displays a single mascot pose image.
-///
-/// Mascot artwork is authored as 1:1 square PNGs in `assets/images/mascot/`.
 class Mascot extends StatelessWidget {
   const Mascot({
     super.key,
@@ -26,34 +21,31 @@ class Mascot extends StatelessWidget {
     this.height,
   });
 
-  const Mascot.thumbsUp({super.key, this.width, this.height})
-      : pose = MascotPose.thumbsUp;
-
-  const Mascot.shy({super.key, this.width, this.height})
-      : pose = MascotPose.shy;
-
-  const Mascot.winking({super.key, this.width, this.height})
-      : pose = MascotPose.winking;
-
-  const Mascot.walking({super.key, this.width, this.height})
-      : pose = MascotPose.walking;
-
-  const Mascot.sitting({super.key, this.width, this.height})
-      : pose = MascotPose.sitting;
-
-  const Mascot.sleeping({super.key, this.width, this.height})
-      : pose = MascotPose.sleeping;
-
-  const Mascot.bitten({super.key, this.width, this.height})
-      : pose = MascotPose.bitten;
-
   const Mascot.running({super.key, this.width, this.height})
       : pose = MascotPose.running;
 
-  const Mascot.standing({super.key, this.width, this.height})
-      : pose = MascotPose.standing;
+  const Mascot.armsOut({super.key, this.width, this.height})
+      : pose = MascotPose.armsOut;
 
-  /// Native pixel size of each mascot PNG (square).
+  const Mascot.waiting({super.key, this.width, this.height})
+      : pose = MascotPose.waiting;
+
+  const Mascot.thumbs({super.key, this.width, this.height})
+      : pose = MascotPose.thumbs;
+
+  const Mascot.wave({super.key, this.width, this.height})
+      : pose = MascotPose.wave;
+
+  const Mascot.lay({super.key, this.width, this.height})
+      : pose = MascotPose.lay;
+
+  const Mascot.sit({super.key, this.width, this.height})
+      : pose = MascotPose.sit;
+
+  const Mascot.nod({super.key, this.width, this.height})
+      : pose = MascotPose.nod;
+
+  /// Native pixel size of each mascot image (square).
   static const double nativeSize = 768;
 
   /// Aspect ratio of a mascot image (1:1).
@@ -63,50 +55,31 @@ class Mascot extends StatelessWidget {
   final double? width;
   final double? height;
 
-  AssetGenImage get _asset {
+  String get _path {
     switch (pose) {
-      case MascotPose.thumbsUp:
-        return Assets.images.mascot.mascotThumbsUp;
-      case MascotPose.shy:
-        return Assets.images.mascot.mascotShy;
-      case MascotPose.winking:
-        return Assets.images.mascot.mascotWinking;
-      case MascotPose.walking:
-        return Assets.images.mascot.mascotWalking;
-      case MascotPose.sitting:
-        return Assets.images.mascot.mascotSitting;
-      case MascotPose.sleeping:
-        return Assets.images.mascot.mascotSleeping;
-      case MascotPose.bitten:
-        return Assets.images.mascot.mascotBitten;
       case MascotPose.running:
-        return Assets.images.mascot.runningMascot;
-      case MascotPose.standing:
-        return Assets.images.mascot.standingMascot;
+        return 'assets/images/animated_mascots/1_apple_running_nobg.webp';
+      case MascotPose.armsOut:
+        return 'assets/images/animated_mascots/2_apple_arms_out_nobg.webp';
+      case MascotPose.waiting:
+        return 'assets/images/animated_mascots/3_apple_waiting_nobg.webp';
+      case MascotPose.thumbs:
+        return 'assets/images/animated_mascots/4_apple_thumbs_nobg.webp';
+      case MascotPose.wave:
+        return 'assets/images/animated_mascots/5_apple_wave_nobg.webp';
+      case MascotPose.lay:
+        return 'assets/images/animated_mascots/6_apple_lay_nobg.webp';
+      case MascotPose.sit:
+        return 'assets/images/animated_mascots/7_apple_sit_nobg.webp';
+      case MascotPose.nod:
+        return 'assets/images/animated_mascots/8_apple_nod_nobg.webp';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (pose == MascotPose.thumbsUp) {
-      return Image.asset(
-        'assets/images/mascot/mascot_thumbs_up_nobg.webp',
-        width: width,
-        height: height,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.medium,
-      );
-    }
-    if (pose == MascotPose.sitting) {
-      return Image.asset(
-        'assets/images/mascot/mascot_sitting_nobg.webp',
-        width: width,
-        height: height,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.medium,
-      );
-    }
-    return _asset.image(
+    return Image.asset(
+      _path,
       width: width,
       height: height,
       fit: BoxFit.contain,

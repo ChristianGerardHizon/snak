@@ -305,7 +305,7 @@ class _ConfirmationCard extends StatelessWidget {
             child: FittedBox(
               fit: BoxFit.contain,
               alignment: Alignment.bottomRight,
-              child: Mascot.sitting(width: mascotW, height: mascotH),
+              child: Mascot.sit(width: mascotW, height: mascotH),
             ),
           ),
           Positioned(
@@ -492,7 +492,7 @@ class _ConfirmationCard extends StatelessWidget {
             right: pad * 0.4,
             bottom: pillH + pad * 0.6,
             child: IgnorePointer(
-              child: Mascot.sitting(width: mascotW, height: mascotH),
+              child: Mascot.sit(width: mascotW, height: mascotH),
             ),
           ),
         ],

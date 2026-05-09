@@ -156,7 +156,7 @@ class _CardWithMascot extends StatelessWidget {
             bottom: pillH + cardHeight * 0.06,
             child: FittedBox(
               fit: BoxFit.contain,
-              child: Mascot.shy(width: mascotWidth, height: mascotHeight),
+              child: Mascot.armsOut(width: mascotWidth, height: mascotHeight),
             ),
           ),
           Positioned(
@@ -223,7 +223,7 @@ class _CardWithMascot extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Center(
-                  child: Mascot.shy(
+                  child: Mascot.armsOut(
                     width: mascotWidth,
                     height: mascotHeight,
                   ),
