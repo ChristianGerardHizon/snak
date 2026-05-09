@@ -39,7 +39,6 @@ class _CheckingResultPageState extends State<CheckingResultPage>
   static const _fillGreenDeep = Color(0xFF22C55E);
 
   static const _ink = Color(0xFF1A1A1A);
-  static const _headlineRed = Color(0xFFE53935);
 
   @override
   void initState() {
@@ -125,16 +124,16 @@ class _CheckingResultPageState extends State<CheckingResultPage>
 
                   final headlineStyle = TextStyle(
                     fontFamily: AppThemes.fontFamily,
-                    color: _headlineRed,
+                    color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: headlineSize,
                     letterSpacing: 0.9,
                     height: 1.15,
                     shadows: [
                       Shadow(
-                        color: Colors.black.withValues(alpha: 0.18),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withValues(alpha: 0.4),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   );

@@ -100,7 +100,7 @@ class SplashPage extends HookWidget {
     )..repeat(reverse: true);
 
     return Scaffold(
-      backgroundColor: _startRed,
+      backgroundColor: Colors.transparent,
       body: Material(
         type: MaterialType.transparency,
         child: Stack(

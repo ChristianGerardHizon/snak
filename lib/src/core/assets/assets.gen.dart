@@ -139,9 +139,9 @@ class $AssetsImagesMascotGen {
   AssetGenImage get mascotSleeping =>
       const AssetGenImage('assets/images/mascot/mascot_sleeping.png');
 
-  /// File path: assets/images/mascot/mascot_thumbs_up.png
+  /// File path: assets/images/mascot/mascot_thumbs_up.webp
   AssetGenImage get mascotThumbsUp =>
-      const AssetGenImage('assets/images/mascot/mascot_thumbs_up.png');
+      const AssetGenImage('assets/images/mascot/mascot_thumbs_up.webp');
 
   /// File path: assets/images/mascot/mascot_walking.png
   AssetGenImage get mascotWalking =>

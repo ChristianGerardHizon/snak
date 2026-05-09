@@ -88,6 +88,15 @@ class Mascot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (pose == MascotPose.thumbsUp) {
+      return Image.asset(
+        'assets/images/mascot/mascot_thumbs_up_nobg.webp',
+        width: width,
+        height: height,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
+      );
+    }
     return _asset.image(
       width: width,
       height: height,

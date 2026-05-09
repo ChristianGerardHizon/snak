@@ -31,7 +31,7 @@ class _StandStillWaitingPageState extends State<StandStillWaitingPage> {
   void initState() {
     super.initState();
     final done = widget.measurementComplete ??
-        Future<void>.delayed(const Duration(seconds: 3));
+        Future<void>.delayed(const Duration(seconds: 6));
     done.then((_) {
       if (!mounted) return;
       widget.onComplete();
@@ -98,11 +98,15 @@ class _StandStillWaitingPageState extends State<StandStillWaitingPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('STAND STILL...', style: headlineStyle),
-                    SizedBox(height: maxH * 0.045),
                     Mascot.standing(
                       width: spriteW,
                       height: spriteH,
+                    ),
+                    SizedBox(height: maxH * 0.005),
+                    Text(
+                      'STAND STILL AND STAY IN PLACE...',
+                      style: headlineStyle,
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
