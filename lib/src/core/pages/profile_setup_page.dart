@@ -13,7 +13,6 @@ import '../../features/health/models/health_report.dart';
 import '../../features/students/data/students_repository.dart';
 import '../../features/students/models/student.dart';
 import '../widgets/form_feedback.dart';
-import '../widgets/looping_video_background.dart';
 import '../widgets/rise_in_animation.dart';
 import 'information_confirmation_page.dart';
 import 'measurement_instruction_page.dart';
@@ -484,17 +483,13 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
     final edgePad = size.width * 0.04;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: true,
       body: Material(
         type: MaterialType.transparency,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const LoopingVideoBackground(
-              assetPath: 'assets/videos/background_animated.mp4',
-              fit: BoxFit.cover,
-              zoom: 1.25,
-            ),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {

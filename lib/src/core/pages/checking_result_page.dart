@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
-import '../widgets/looping_video_background.dart';
 import '../packages/theme/app_themes.dart';
 
 /// Shown after stand-still; displays for 8 seconds with a filling progress bar,
@@ -92,16 +91,12 @@ class _CheckingResultPageState extends State<CheckingResultPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Material(
         type: MaterialType.transparency,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const LoopingVideoBackground(
-              assetPath: 'assets/videos/background_animated.mp4',
-              fit: BoxFit.cover,
-              zoom: 1.25,
-            ),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {

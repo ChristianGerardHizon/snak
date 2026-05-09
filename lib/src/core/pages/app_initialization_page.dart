@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/looping_video_background.dart';
 import 'health_monitoring_consent_page.dart';
 import 'health_monitoring_join_page.dart';
 import 'measurement_result_page.dart';
@@ -72,11 +73,21 @@ class AppInitializationPage extends StatelessWidget {
       );
     }
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 350),
-      switchInCurve: Curves.easeOut,
-      switchOutCurve: Curves.easeIn,
-      child: current,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const LoopingVideoBackground(
+          assetPath: 'assets/videos/background_animated.mp4',
+          fit: BoxFit.cover,
+          zoom: 1.25,
+        ),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          child: current,
+        ),
+      ],
     );
   }
 }

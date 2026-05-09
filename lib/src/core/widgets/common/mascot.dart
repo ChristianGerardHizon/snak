@@ -97,6 +97,15 @@ class Mascot extends StatelessWidget {
         filterQuality: FilterQuality.medium,
       );
     }
+    if (pose == MascotPose.sitting) {
+      return Image.asset(
+        'assets/images/mascot/mascot_sitting_nobg.webp',
+        width: width,
+        height: height,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
+      );
+    }
     return _asset.image(
       width: width,
       height: height,
