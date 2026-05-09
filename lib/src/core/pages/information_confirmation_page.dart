@@ -170,9 +170,9 @@ class _ConfirmationCard extends StatelessWidget {
       return _buildPortrait(context);
     }
     // Slim the mascot on shorter landscape so the info column has room.
-    final mascotH = cardHeight * (cardHeight < 720 ? 0.56 : 0.62);
+    final mascotH = cardHeight * (cardHeight < 720 ? 0.78 : 0.88);
     final mascotW = mascotH * Mascot.aspect;
-    final mascotColumnW = mascotW.clamp(0.0, cardWidth * 0.30);
+    final mascotColumnW = mascotW.clamp(0.0, cardWidth * 0.42);
 
     final pillH = (cardHeight * 0.10).clamp(44.0, 72.0).toDouble();
     final confirmW =
