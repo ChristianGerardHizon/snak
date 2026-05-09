@@ -102,21 +102,26 @@ class $AssetsImagesGen {
   AssetGenImage get snakLogo =>
       const AssetGenImage('assets/images/snak_logo.png');
 
-  /// File path: assets/images/sprites_sheet.png
-  AssetGenImage get spritesSheet =>
-      const AssetGenImage('assets/images/sprites_sheet.png');
+  /// List of all assets
+  List<AssetGenImage> get values => [background, snakLogo];
+}
 
-  /// File path: assets/images/sprites_sheet_2.png
-  AssetGenImage get spritesSheet2 =>
-      const AssetGenImage('assets/images/sprites_sheet_2.png');
+class $AssetsVideosGen {
+  const $AssetsVideosGen();
+
+  /// File path: assets/videos/background_animated.mp4
+  String get backgroundAnimated => 'assets/videos/background_animated.mp4';
 
   /// List of all assets
-  List<AssetGenImage> get values =>
-      [background, snakLogo, spritesSheet, spritesSheet2];
+  List<String> get values => [backgroundAnimated];
 }
 
 class $AssetsImagesMascotGen {
   const $AssetsImagesMascotGen();
+
+  /// File path: assets/images/mascot/arms_out_mascot.gif
+  AssetGenImage get armsOutMascot =>
+      const AssetGenImage('assets/images/mascot/arms_out_mascot.gif');
 
   /// File path: assets/images/mascot/mascot_bitten.png
   AssetGenImage get mascotBitten =>
@@ -146,15 +151,26 @@ class $AssetsImagesMascotGen {
   AssetGenImage get mascotWinking =>
       const AssetGenImage('assets/images/mascot/mascot_winking.png');
 
+  /// File path: assets/images/mascot/running_mascot.gif
+  AssetGenImage get runningMascot =>
+      const AssetGenImage('assets/images/mascot/running_mascot.gif');
+
+  /// File path: assets/images/mascot/standing_mascot.gif
+  AssetGenImage get standingMascot =>
+      const AssetGenImage('assets/images/mascot/standing_mascot.gif');
+
   /// List of all assets
   List<AssetGenImage> get values => [
+        armsOutMascot,
         mascotBitten,
         mascotShy,
         mascotSitting,
         mascotSleeping,
         mascotThumbsUp,
         mascotWalking,
-        mascotWinking
+        mascotWinking,
+        runningMascot,
+        standingMascot
       ];
 }
 
@@ -163,6 +179,7 @@ class Assets {
 
   static const $AssetsIconsGen icons = $AssetsIconsGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
+  static const $AssetsVideosGen videos = $AssetsVideosGen();
 }
 
 class AssetGenImage {

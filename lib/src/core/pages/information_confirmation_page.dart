@@ -4,6 +4,7 @@ import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/snak_pill_button.dart';
 import '../widgets/common/mascot.dart';
+import '../widgets/looping_video_background.dart';
 import '../packages/theme/app_themes.dart';
 
 /// Read-only review of student profile before finishing onboarding.
@@ -49,10 +50,10 @@ class InformationConfirmationPage extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image(
-              image: Assets.images.background.provider(),
+            const LoopingVideoBackground(
+              assetPath: 'assets/videos/background_animated.mp4',
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.medium,
+              zoom: 1.25,
             ),
             SafeArea(
               child: LayoutBuilder(
@@ -61,15 +62,20 @@ class InformationConfirmationPage extends StatelessWidget {
                   final maxH = constraints.maxHeight;
 
                   final isPortrait = maxW < maxH * 0.95;
+                  // Landscape: 6 info lines + headline + mascot don't fit in
+                  // the old 0.74/620 cap on iPad 10 landscape (~760 safe). Push
+                  // the card to fill nearly the full viewport.
                   final cardW =
                       (maxW * 0.94).clamp(320.0, 1100.0).toDouble();
                   final cardH = isPortrait
-                      ? (maxH * 0.78).clamp(480.0, 900.0).toDouble()
-                      : (maxH * 0.74).clamp(360.0, 620.0).toDouble();
+                      ? (maxH * 0.86).clamp(480.0, 1000.0).toDouble()
+                      : (maxH * 0.92).clamp(360.0, 760.0).toDouble();
 
+                  // Shrink the side logo on short landscape viewports.
+                  final logoCap = maxH < 800 ? 96.0 : 160.0;
                   final logoW = isPortrait
                       ? (maxW * 0.32).clamp(120.0, 240.0).toDouble()
-                      : (maxW * 0.12).clamp(72.0, 160.0).toDouble();
+                      : (maxW * 0.12).clamp(72.0, logoCap).toDouble();
                   final logoH = logoW / SnakLogoRaster.aspect;
 
                   final logo = SizedBox(
@@ -168,11 +174,12 @@ class _ConfirmationCard extends StatelessWidget {
     if (isPortrait) {
       return _buildPortrait(context);
     }
-    final mascotH = cardHeight * 0.62;
+    // Slim the mascot on shorter landscape so the info column has room.
+    final mascotH = cardHeight * (cardHeight < 720 ? 0.56 : 0.62);
     final mascotW = mascotH * Mascot.aspect;
-    final mascotColumnW = mascotW.clamp(0.0, cardWidth * 0.34);
+    final mascotColumnW = mascotW.clamp(0.0, cardWidth * 0.30);
 
-    final pillH = (cardHeight * 0.11).clamp(48.0, 72.0).toDouble();
+    final pillH = (cardHeight * 0.10).clamp(44.0, 72.0).toDouble();
     final confirmW =
         (cardWidth * 0.38).clamp(220.0, 420.0).toDouble();
     final backW = (cardWidth * 0.18).clamp(120.0, 220.0).toDouble();
@@ -224,9 +231,9 @@ class _ConfirmationCard extends StatelessWidget {
           ),
           Positioned(
             left: cardWidth * 0.04,
-            top: cardHeight * 0.04,
+            top: cardHeight * 0.035,
             right: mascotColumnW + cardWidth * 0.04,
-            bottom: pillH + cardHeight * 0.08,
+            bottom: pillH + cardHeight * 0.05,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -241,7 +248,7 @@ class _ConfirmationCard extends StatelessWidget {
                     letterSpacing: 0.3,
                   ),
                 ),
-                SizedBox(height: cardHeight * 0.04),
+                SizedBox(height: cardHeight * 0.025),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -253,35 +260,35 @@ class _ConfirmationCard extends StatelessWidget {
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: cardHeight * 0.03),
+                        SizedBox(height: cardHeight * 0.022),
                         _InfoLine(
                           label: 'NAME:',
                           value: name,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: cardHeight * 0.03),
+                        SizedBox(height: cardHeight * 0.022),
                         _InfoLine(
                           label: 'AGE:',
                           value: age,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: cardHeight * 0.03),
+                        SizedBox(height: cardHeight * 0.022),
                         _InfoLine(
                           label: 'GENDER:',
                           value: sex,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: cardHeight * 0.03),
+                        SizedBox(height: cardHeight * 0.022),
                         _InfoLine(
                           label: 'GRADE:',
                           value: grade,
                           labelStyle: labelStyle,
                           valueStyle: valueStyle,
                         ),
-                        SizedBox(height: cardHeight * 0.03),
+                        SizedBox(height: cardHeight * 0.022),
                         _InfoLine(
                           label: 'SECTION:',
                           value: section,
@@ -308,7 +315,7 @@ class _ConfirmationCard extends StatelessWidget {
           ),
           Positioned(
             left: cardWidth * 0.04,
-            bottom: cardHeight * 0.04,
+            bottom: cardHeight * 0.03,
             child: Row(
               children: [
                 SnakPillButton(

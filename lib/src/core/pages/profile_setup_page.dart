@@ -13,6 +13,7 @@ import '../../features/health/models/health_report.dart';
 import '../../features/students/data/students_repository.dart';
 import '../../features/students/models/student.dart';
 import '../widgets/form_feedback.dart';
+import '../widgets/looping_video_background.dart';
 import '../widgets/rise_in_animation.dart';
 import 'information_confirmation_page.dart';
 import 'measurement_instruction_page.dart';
@@ -198,10 +199,20 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
     );
   }
 
-  Future<void> _persistAndAdvance() async {
-    debugPrint('[ProfileSetup] CONFIRM tapped (persisting=$_persisting)');
+  ({
+    MeasurementResultOutcome outcome,
+    double heightCm,
+    double weightKg,
+    double tempC,
+    int hr,
+    String bp,
+  })? _pendingVitals;
+
+  /// Called from the confirmation page. Picks the outcome + vitals, stashes
+  /// them, and advances the UI. The actual server write happens later, on the
+  /// "checking your result" page.
+  void _advanceFromConfirmation() {
     if (_persisting) return;
-    setState(() => _persisting = true);
 
     final overrides = reportDataOverrides.value;
 
@@ -223,12 +234,38 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
         : MeasurementResultOutcome
             .values[Random().nextInt(MeasurementResultOutcome.values.length)];
     final rolled = _fakeVitals(outcome);
-    final v = (
+
+    _pendingVitals = (
+      outcome: outcome,
       heightCm: overrides.heightCm ?? rolled.heightCm,
       weightKg: overrides.weightKg ?? rolled.weightKg,
       tempC: rolled.tempC,
       hr: rolled.hr,
       bp: rolled.bp,
+    );
+
+    setState(() {
+      _showConfirmation = false;
+      _showMeasurementInstruction = true;
+    });
+  }
+
+  Future<void> _persistOnCheckingResult() async {
+    final pending = _pendingVitals;
+    if (pending == null) {
+      debugPrint('[ProfileSetup] no pending vitals to persist');
+      return;
+    }
+    if (_persisting) return;
+    _persisting = true;
+
+    final outcome = pending.outcome;
+    final v = (
+      heightCm: pending.heightCm,
+      weightKg: pending.weightKg,
+      tempC: pending.tempC,
+      hr: pending.hr,
+      bp: pending.bp,
     );
 
     try {
@@ -307,7 +344,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
             ),
           );
 
-      debugPrint('[ProfileSetup] all writes ok, advancing');
+      debugPrint('[ProfileSetup] all writes ok');
       if (!mounted) return;
       setState(() {
         _rolledMeasurementOutcome = outcome;
@@ -316,17 +353,29 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
         _rolledWeightKg = v.weightKg;
         _rolledVisitDate = DateTime.now();
         _persisting = false;
-        _showConfirmation = false;
-        _showMeasurementInstruction = true;
       });
+      _pendingVitals = null;
     } catch (e, st) {
       debugPrint('[ProfileSetup] persist failed: $e\n$st');
-      if (!mounted) return;
-      setState(() => _persisting = false);
-      rootScaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(content: Text('Failed to save: $e')),
-      );
+      if (mounted) {
+        setState(() => _persisting = false);
+      }
+      rethrow;
     }
+  }
+
+  void _handleCheckingResultSaveError(Object error, StackTrace stackTrace) {
+    if (!mounted) return;
+    setState(() {
+      _showCheckingResult = false;
+      _showStandStillWaiting = false;
+      _showMeasurementInstruction = false;
+      _showConfirmation = false;
+      _persisting = false;
+    });
+    rootScaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(content: Text('Failed to save: $error')),
+    );
   }
 
   @override
@@ -391,6 +440,8 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
 
     if (_showCheckingResult) {
       return CheckingResultPage(
+        onSave: _persistOnCheckingResult,
+        onSaveError: _handleCheckingResultSaveError,
         onComplete: () => setState(() {
           _showCheckingResult = false;
           _showMeasurementResult = true;
@@ -424,7 +475,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
         sex: _sexLabel(_sex),
         grade: _selectedGrade ?? '',
         section: _sectionController.text.trim(),
-        onConfirm: _persisting ? () {} : _persistAndAdvance,
+        onConfirm: _persisting ? () {} : _advanceFromConfirmation,
         onBack: () => setState(() => _showConfirmation = false),
       );
     }
@@ -439,10 +490,10 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image(
-              image: Assets.images.background.provider(),
+            const LoopingVideoBackground(
+              assetPath: 'assets/videos/background_animated.mp4',
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.medium,
+              zoom: 1.25,
             ),
             SafeArea(
               child: LayoutBuilder(
@@ -451,12 +502,19 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                   final maxH = constraints.maxHeight;
 
                   final isPortrait = maxW < maxH * 0.95;
+                  // iPad 10 landscape (~1180×~760 safe) needs the card to
+                  // stretch close to full height to fit 6 form fields without
+                  // scrolling. Raise the landscape ceiling and lift the floor.
                   final cardW = (maxW * 0.94).clamp(320.0, 1100.0).toDouble();
                   final cardH = isPortrait
                       ? (maxH * 0.92).clamp(560.0, 1100.0).toDouble()
-                      : (maxH * 0.86).clamp(420.0, 720.0).toDouble();
+                      : (maxH * 0.94).clamp(420.0, 820.0).toDouble();
 
-                  final logoW = (maxW * 0.12).clamp(72.0, 160.0).toDouble();
+                  // Shrink the bottom logo on short landscape viewports so the
+                  // card gets the vertical room.
+                  final logoCap = maxH < 800 ? 96.0 : 160.0;
+                  final logoW =
+                      (maxW * 0.12).clamp(72.0, logoCap).toDouble();
                   final logoH = logoW / SnakLogoRaster.aspect;
 
                   return Padding(
@@ -582,11 +640,13 @@ class _ProfileCard extends StatelessWidget {
     if (isPortrait) {
       return _buildPortrait(context);
     }
-    final mascotColumnW = cardWidth * 0.42;
-    final mascotH = (cardHeight * 0.78).clamp(0.0, cardHeight - 24).toDouble();
+    // Slim the mascot column on shorter landscape viewports (iPad 10 landscape
+    // ≈ 770px card height) so the form gets more horizontal room.
+    final mascotColumnW = cardWidth * (cardHeight < 760 ? 0.36 : 0.42);
+    final mascotH = (cardHeight * 0.74).clamp(0.0, cardHeight - 24).toDouble();
     final mascotW = mascotH * Mascot.aspect;
 
-    final pillH = (cardHeight * 0.11).clamp(48.0, 72.0).toDouble();
+    final pillH = (cardHeight * 0.10).clamp(44.0, 72.0).toDouble();
     final pillW = (cardWidth * 0.5).clamp(280.0, 560.0).toDouble();
 
     final headlineSize = (cardWidth * 0.05).clamp(28.0, 56.0).toDouble();
@@ -653,9 +713,9 @@ class _ProfileCard extends StatelessWidget {
           ),
           Positioned(
             left: cardWidth * 0.04,
-            top: cardHeight * 0.05,
-            right: mascotColumnW + cardWidth * 0.06,
-            bottom: pillH + cardHeight * 0.1,
+            top: cardHeight * 0.04,
+            right: mascotColumnW + cardWidth * 0.04,
+            bottom: pillH + cardHeight * 0.06,
             child: _ProfileForm(
               fieldColor: fieldColor,
               studentIdController: studentIdController,
@@ -671,7 +731,7 @@ class _ProfileCard extends StatelessWidget {
           ),
           Positioned(
             left: cardWidth * 0.04,
-            bottom: cardHeight * 0.05,
+            bottom: cardHeight * 0.035,
             child: SnakPillButton(
               label: "GOT IT! LET'S START",
               labelColor: actionColor,

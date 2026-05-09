@@ -4,6 +4,7 @@ import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../packages/theme/app_themes.dart';
 import '../widgets/common/mascot.dart';
+import '../widgets/looping_video_background.dart';
 import '../widgets/rise_in_animation.dart';
 
 /// Health-monitoring opt-in step shown after the consent intro.
@@ -32,10 +33,10 @@ class HealthMonitoringJoinPage extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image(
-              image: Assets.images.background.provider(),
+            const LoopingVideoBackground(
+              assetPath: 'assets/videos/background_animated.mp4',
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.medium,
+              zoom: 1.25,
             ),
             SafeArea(
               child: LayoutBuilder(

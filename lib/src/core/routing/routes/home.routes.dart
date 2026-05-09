@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../pages/home_page.dart';
+import '../router_utils.dart';
 
 part 'home.routes.g.dart';
 
@@ -12,7 +13,6 @@ class HomeRoute extends GoRouteData with $HomeRoute {
   static const path = '/';
 
   @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return const HomePage();
-  }
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      RouterUtils.fadePage(state, const HomePage());
 }

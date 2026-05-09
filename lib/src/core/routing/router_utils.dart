@@ -8,6 +8,24 @@ abstract class RouterUtils {
   /// No auth or version gates in the shell-only app.
   static String? redirect(BuildContext context, GoRouterState state) => null;
 
+  /// Cross-fade page transition shared by all routes. Avoids the white/black
+  /// slide flash that Material's default route transition shows on web.
+  static CustomTransitionPage<T> fadePage<T>(
+    GoRouterState state,
+    Widget child, {
+    Duration duration = const Duration(milliseconds: 220),
+  }) {
+    return CustomTransitionPage<T>(
+      key: state.pageKey,
+      transitionDuration: duration,
+      reverseTransitionDuration: duration,
+      child: child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+    );
+  }
+
   /// Error page builder for unknown routes.
   static Widget errorBuilder(BuildContext context, GoRouterState state) {
     return Scaffold(

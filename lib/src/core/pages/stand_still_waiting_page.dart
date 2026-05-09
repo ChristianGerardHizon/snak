@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
+import '../widgets/looping_video_background.dart';
 import '../packages/theme/app_themes.dart';
 
 /// Shown after measurement instructions while the student is being measured.
@@ -48,7 +49,7 @@ class _StandStillWaitingPageState extends State<StandStillWaitingPage> {
         final logoWidth = (maxW * 0.19).clamp(108.0, 230.0).toDouble();
         final logoHeight = logoWidth / SnakLogoRaster.aspect;
 
-        final spriteH = (maxH * 0.42).clamp(200.0, 420.0).toDouble();
+        final spriteH = (maxH * 0.84).clamp(400.0, 840.0).toDouble();
         final spriteW = spriteH * Mascot.aspect;
 
         final headlineSize = (maxW * 0.065).clamp(26.0, 44.0).toDouble();
@@ -75,11 +76,11 @@ class _StandStillWaitingPageState extends State<StandStillWaitingPage> {
             clipBehavior: Clip.none,
             fit: StackFit.expand,
             children: [
-              Positioned.fill(
-                child: Image(
-                  image: Assets.images.background.provider(),
+              const Positioned.fill(
+                child: LoopingVideoBackground(
+                  assetPath: 'assets/videos/background_animated.mp4',
                   fit: BoxFit.cover,
-                  filterQuality: FilterQuality.medium,
+                  zoom: 1.25,
                 ),
               ),
               Positioned(
@@ -99,7 +100,7 @@ class _StandStillWaitingPageState extends State<StandStillWaitingPage> {
                   children: [
                     Text('STAND STILL...', style: headlineStyle),
                     SizedBox(height: maxH * 0.045),
-                    Mascot.sleeping(
+                    Mascot.standing(
                       width: spriteW,
                       height: spriteH,
                     ),

@@ -3,17 +3,25 @@ import 'package:flutter/material.dart';
 import '../assets/assets.gen.dart';
 import '../constants/constants.dart';
 import '../widgets/common/mascot.dart';
+import '../widgets/looping_video_background.dart';
 import '../packages/theme/app_themes.dart';
 
 /// Shown after stand-still; displays for 8 seconds with a filling progress bar,
-/// then calls [onComplete].
+/// while [onSave] persists the visit to the server in the background. Calls
+/// [onComplete] only once both the animation and the save have succeeded. If
+/// the save throws, [onSaveError] is called instead and [onComplete] never
+/// fires.
 class CheckingResultPage extends StatefulWidget {
   const CheckingResultPage({
     super.key,
     required this.onComplete,
+    this.onSave,
+    this.onSaveError,
   });
 
   final VoidCallback onComplete;
+  final Future<void> Function()? onSave;
+  final void Function(Object error, StackTrace stackTrace)? onSaveError;
 
   @override
   State<CheckingResultPage> createState() => _CheckingResultPageState();
@@ -22,6 +30,10 @@ class CheckingResultPage extends StatefulWidget {
 class _CheckingResultPageState extends State<CheckingResultPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _progress;
+  bool _animationDone = false;
+  bool _saveDone = false;
+  bool _saveFailed = false;
+  bool _completed = false;
 
   static const _fillGreen = Color(0xFF4ADE80);
   static const _fillGreenDeep = Color(0xFF22C55E);
@@ -39,9 +51,37 @@ class _CheckingResultPageState extends State<CheckingResultPage>
     _progress.forward();
     _progress.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
-        widget.onComplete();
+        _animationDone = true;
+        _maybeComplete();
       }
     });
+
+    final save = widget.onSave;
+    if (save == null) {
+      _saveDone = true;
+    } else {
+      save().then(
+        (_) {
+          if (!mounted) return;
+          _saveDone = true;
+          _maybeComplete();
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (!mounted) return;
+          _saveFailed = true;
+          _completed = true;
+          widget.onSaveError?.call(error, stackTrace);
+        },
+      );
+    }
+  }
+
+  void _maybeComplete() {
+    if (_completed || _saveFailed) return;
+    if (_animationDone && _saveDone) {
+      _completed = true;
+      widget.onComplete();
+    }
   }
 
   @override
@@ -58,10 +98,10 @@ class _CheckingResultPageState extends State<CheckingResultPage>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image(
-              image: Assets.images.background.provider(),
+            const LoopingVideoBackground(
+              assetPath: 'assets/videos/background_animated.mp4',
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.medium,
+              zoom: 1.25,
             ),
             SafeArea(
               child: LayoutBuilder(
@@ -115,7 +155,7 @@ class _CheckingResultPageState extends State<CheckingResultPage>
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Mascot.walking(
+                                    Mascot.running(
                                       width: spriteW,
                                       height: spriteH,
                                     ),

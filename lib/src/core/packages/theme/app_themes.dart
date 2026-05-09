@@ -19,6 +19,9 @@ class AppThemes {
   /// App-wide font family.
   static const String fontFamily = 'AlmondMocca';
 
+  /// Brand sky color matching the static background image.
+  static const Color brandSky = Color(0xFFBDD5ED);
+
   /// Light theme definition.
   static AppTheme light() => AppTheme(
         id: lightId,
@@ -30,6 +33,7 @@ class AppThemes {
           ),
           useMaterial3: true,
           fontFamily: fontFamily,
+          scaffoldBackgroundColor: Colors.black,
         ),
       );
 
@@ -44,6 +48,7 @@ class AppThemes {
           ),
           useMaterial3: true,
           fontFamily: fontFamily,
+          scaffoldBackgroundColor: Colors.black,
         ),
       );
 
